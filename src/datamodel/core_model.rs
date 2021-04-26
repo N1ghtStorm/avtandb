@@ -21,6 +21,16 @@ mod core_model {
                      bonds_collection: Vec::new()})
         }
 
+        fn create_node(&mut self, node: Node) -> Result<(), ()> {
+            self.nodes_collection.push(node);
+            Ok(())
+        }
+
+        fn create_bond(&mut self, bond: Bond) -> Result<(), ()> {
+            self.bonds_collection.push(bond);
+            Ok(())
+        }
+
         fn delete_graph(self){
             drop(self);
         }
