@@ -1,6 +1,12 @@
 mod core_model {
+
+    pub trait Graph {
+        fn create_node(&mut self, node: Node) -> Result<(), ()>;
+        fn create_bond(&mut self, bond: Bond) -> Result<(), ()>;
+    } 
+
     /// Main Graph Model
-    pub struct Graph {
+    pub struct InMemoryGraph {
         name: String,
         nodes_collection: Vec<Node>,
         bonds_collection: Vec<Bond>
@@ -16,20 +22,26 @@ mod core_model {
     /// Main Bond(Relation) document collection element
     pub struct Bond {
         id: u32,
-        label: String
+        label: String,
+        src: i32,
+        dst: i32
     }
 
-
-    //  Main Graph action Methods
-    impl Graph {
-
+    impl InMemoryGraph {
         /// Creates new empty Graph
         fn new_graph(name: &str) -> Box<Self> {
-            Box::new(Graph {name: String::from(name), 
+            Box::new(InMemoryGraph {name: String::from(name), 
                      nodes_collection: Vec::new(), 
                      bonds_collection: Vec::new()})
         }
 
+        // Drops Whole Graph
+        fn delete_graph(self){
+            drop(self);
+        }
+    }
+    //  Main Graph action Methods
+    impl Graph for InMemoryGraph {
         /// Creates Node, adding to nodes collection
         fn create_node(&mut self, node: Node) -> Result<(), ()> {
             self.nodes_collection.push(node);
@@ -40,11 +52,6 @@ mod core_model {
         fn create_bond(&mut self, bond: Bond) -> Result<(), ()> {
             self.bonds_collection.push(bond);
             Ok(())
-        }
-
-        // Drops Whole Graph
-        fn delete_graph(self){
-            drop(self);
         }
     }
 }
