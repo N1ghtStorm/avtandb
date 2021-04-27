@@ -7,10 +7,9 @@ mod core_model;
 mod common_model;
 
 fn main() {
-    let graph_collection = initialize_graph_collection();
+    let mut graph_collection = initialize_graph_collection();
 }
 
-
-fn initialize_graph_collection() -> common_model::GraphCollectionFacade {
-    common_model::GraphCollectionFacade {graph_collection: Arc::new(Vec::new())}
+fn initialize_graph_collection() -> Arc<common_model::GraphCollectionFacade> {
+    Arc::new(common_model::GraphCollectionFacade {graph_collection: Arc::new(Vec::new())})
 }
