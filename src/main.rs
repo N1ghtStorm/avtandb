@@ -10,6 +10,25 @@ mod common_model;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    println!("
+    ░░░░░░░░▄▀▀▄
+    ░░░░░▄▀▒▒▒▒▀▄
+    ░░░░░░▀▌▒▒▐▀ 
+    ▄███▀░◐░░░▌   
+    ░░▐▀▌░░░░░▐░░░░░░░░░▄▀▀▀▄▄
+    ░▐░░▐░░░░░▐░░░░░░░░░█░▄█▀
+    ░▐▄▄▌░░░░░▐▄▄░░░░░░█░░▄▄▀▀▀▀▄
+    ░░░░▌░░░░▄▀▒▒▀▀▀▀▄▀░▄▀░▄▄▄▀▀
+    ░░░▐░░░░▐▒▒▒▒▒▒▒▒▀▀▄░░▀▄▄▄░▄
+    ░░░▐░░░░▐▄▒▒▒▒▒▒▒▒▒▒▀▄░▄▄▀▀
+    ░░░░▀▄░░░░▀▄▒▒▒▒▒▒▒▒▒▒▀▄░
+    ░░░░░▀▄▄░░░█▄▄▄▄▄▄▄▄▄▄▄▀▄
+    ░░░░░░░░▀▀▀▄▄▄▄▄▄▄▄▀▀░
+    ░░░░░░░░░░░▌▌░▌▌
+    ░░░░░░░░░▄▄▌▌▄▌▌
+    ");
+    println!("Avtan server starting");
+
     let data = web::Data::new(initialize_graph_collection());
 
     HttpServer::new( move || {
@@ -27,14 +46,32 @@ async fn create_graph(data: web::Data<common_model::GraphCollectionFacade>, body
     let mut graph_collection = data.in_memory_graph_collection.lock().unwrap();
     let graph = common_model::core_model::InMemoryGraph::new_graph("aaa");
     graph_collection.push(graph);
-
     let answer  = format!("number is: {} body is \"{}\"", graph_collection.len(), body);
     HttpResponse::Ok().body(answer)
 }
 
-#[get("/")]
+#[get("/avtan")]
 async fn hi() -> impl Responder {
-    HttpResponse::Ok().body("Db Server works! :)")
+    //HttpResponse::Ok().body("<h1>Kokoko!!! Db Server works! :)</h1>")
+    HttpResponse::Ok().body("
+        ~-.
+        ,,,;            ~-.~-.~-
+    (.../           ~-.~-.~-.~-.~-.
+  < } O~`,         ~-.~-.~-.~-.~-.~-.
+    (/    A      ~-.~-.~-.~-.~-.~-.~-.
+        ;    A     ~-.~-.~-.~-.~-.~-.~-.
+    ;     {_.~-.~-.~-.~-.~-.~-.~
+    ;:  .-~`    ~-.~-.~-.~-.~-.
+    ;.: :'    ._   ~-.~-.~-.~-.~-
+    ;::`-.    '-._  ~-.~-.~-.~-
+    ;::. `-.    '-,~-.~-.~-.
+        ';::::.`''-.-'
+        ';::;;:,:'
+            '||э
+            / |
+
+AVTAN DB IS RUNNING!!! KOKOKOKOKOKOKOKOKOKO!!!!! KOKOK!!! POKPOKPOK!!!!!
+    ")
 }
 
 /// initialize common graph collection for all programm lifetime

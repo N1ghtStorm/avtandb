@@ -1,5 +1,5 @@
 [package]
-name = "elvira_db"
+name = "avtandb"
 version = "0.1.0"
 authors = ["N1ghtStorm <diman1ghtly@gmail.com>"]
 edition = "2018"
