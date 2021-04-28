@@ -23,12 +23,12 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-async fn create_graph(data: web::Data<common_model::GraphCollectionFacade>) -> impl Responder {
+async fn create_graph(data: web::Data<common_model::GraphCollectionFacade>, body: String) -> impl Responder {
     let mut graph_collection = data.in_memory_graph_collection.lock().unwrap();
     let graph = common_model::core_model::InMemoryGraph::new_graph("aaa");
     graph_collection.push(graph);
-    
-    let answer  = format!("number is: {}", graph_collection.len());
+
+    let answer  = format!("number is: {} body is \"{}\"", graph_collection.len(), body);
     HttpResponse::Ok().body(answer)
 }
 
@@ -39,9 +39,6 @@ async fn hi() -> impl Responder {
 
 /// initialize common graph collection for all programm lifetime
 fn initialize_graph_collection() -> common_model::GraphCollectionFacade {
-    // Arc::new(Mutex::new(common_model::GraphCollectionFacade {
-    //     //in_memory_graph_collection: Arc::new(Mutex::new(Vec::new()))
-    // }))
     common_model::GraphCollectionFacade {
         in_memory_graph_collection: Arc::new(Mutex::new(Vec::new()))
     }
