@@ -32,12 +32,12 @@ impl InMemoryGraph {
                     bonds_collection: Vec::new()})
     }
 
-    // Drops Whole Graph
+    /// Drops Whole Graph
     pub fn delete_graph(self){
         drop(self);
     }
 }
-//  Main Graph action Methods
+//  Main Graph action Methods impl
 impl Graph for InMemoryGraph {
     /// Creates Node, adding to nodes collection
     fn create_node(&mut self, node: Node) -> Result<(), ()> {
