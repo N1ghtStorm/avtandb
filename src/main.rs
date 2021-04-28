@@ -18,7 +18,7 @@ async fn main() -> std::io::Result<()> {
             .route("/create_graph", web::get().to(create_graph))
             .service(hi)
     })
-    .bind("127.0.0.1:8080")?
+    .bind("0.0.0.0:18085")?
     .run()
     .await
 }
