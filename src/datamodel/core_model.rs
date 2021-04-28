@@ -26,10 +26,10 @@ pub struct Bond {
 
 impl InMemoryGraph {
     /// Creates new empty Graph
-    pub fn new_graph(name: &str) -> Box<Self> {
-        Box::new(InMemoryGraph {name: String::from(name), 
+    pub fn new_graph(name: &str) -> Self {
+        InMemoryGraph {name: String::from(name), 
                     nodes_collection: Vec::new(), 
-                    bonds_collection: Vec::new()})
+                    bonds_collection: Vec::new()}
     }
 
     /// Drops Whole Graph

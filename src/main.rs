@@ -24,7 +24,12 @@ async fn main() -> std::io::Result<()> {
 }
 
 async fn create_graph(data: web::Data<common_model::GraphCollectionFacade>) -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
+    let mut graph_collection = data.in_memory_graph_collection.lock().unwrap();
+    let graph = common_model::core_model::InMemoryGraph::new_graph("aaa");
+    graph_collection.push(graph);
+    
+    let answer  = format!("number is: {}", graph_collection.len());
+    HttpResponse::Ok().body(answer)
 }
 
 #[get("/")]
