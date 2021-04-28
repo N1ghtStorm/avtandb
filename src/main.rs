@@ -15,7 +15,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new( move || {
         App::new()
             .app_data(data.clone())
-            .service(hello)
+            .route("/create_graph", web::get().to(create_graph))
             .service(hi)
     })
     .bind("127.0.0.1:8080")?
@@ -23,8 +23,7 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-#[get("/create_graph")]
-async fn hello(arc_graph_col_fac: web::Data<common_model::GraphCollectionFacade>, req_body: String) -> impl Responder {
+async fn create_graph(data: web::Data<common_model::GraphCollectionFacade>) -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
 
@@ -34,8 +33,11 @@ async fn hi() -> impl Responder {
 }
 
 /// initialize common graph collection for all programm lifetime
-fn initialize_graph_collection() -> Arc<Mutex<common_model::GraphCollectionFacade>> {
-    Arc::new(Mutex::new(common_model::GraphCollectionFacade {
+fn initialize_graph_collection() -> common_model::GraphCollectionFacade {
+    // Arc::new(Mutex::new(common_model::GraphCollectionFacade {
+    //     //in_memory_graph_collection: Arc::new(Mutex::new(Vec::new()))
+    // }))
+    common_model::GraphCollectionFacade {
         in_memory_graph_collection: Arc::new(Mutex::new(Vec::new()))
-    }))
+    }
 }
