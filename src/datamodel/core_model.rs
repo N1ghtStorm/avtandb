@@ -4,9 +4,9 @@ pub trait Graph {
 } 
 /// Main Graph Model
 pub struct InMemoryGraph {
-    name: String,
-    nodes_collection: Vec<Node>,
-    bonds_collection: Vec<Bond>
+    pub name: String,
+    pub nodes_collection: Vec<Node>,
+    pub bonds_collection: Vec<Bond>
 }    
     
 /// Main Node(Vertex) document collection element 

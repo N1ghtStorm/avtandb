@@ -8,6 +8,12 @@ mod core_model;
 #[path = "./datamodel/common_model.rs"]
 mod common_model;
 
+#[path = "./common_graph_services/in_memory_graph_service.rs"]
+mod in_memory_graph_service;
+
+#[path = "./apimodel/manage_graph_models.rs"]
+pub mod manage_graph_models;
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let url = "0.0.0.0:18085";
@@ -29,7 +35,9 @@ async fn main() -> std::io::Result<()> {
 async fn create_graph(data: web::Data<common_model::GraphCollectionFacade>, body: String) -> impl Responder {
     let mut graph_collection = data.in_memory_graph_collection.lock().unwrap();
     let graph = common_model::core_model::InMemoryGraph::new_graph("aaa");
-    graph_collection.push(graph);
+    // let graph = in_memory_graph_service::create_graph(in_memory_graph_service::manage_graph_models::CreateGraphDTO {name: String::from("asd")},
+    //                                                              data.clone());
+    // graph_collection.push(graph);
     let answer  = format!("number is: {} body is \"{}\"", graph_collection.len(), body);
     HttpResponse::Ok().body(answer)
 }
