@@ -11,24 +11,7 @@ mod common_model;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let url = "0.0.0.0:18085";
-    println!("
-                        ░░░░░░░░▄▀▀▄
-                        ░░░░░▄▀▒▒▒▒▀▄
-                        ░░░░░░▀▌▒▒▐▀ 
-                        ▄███▀░◐░░░▌   
-                        ░░▐▀▌░░░░░▐░░░░░░░░░▄▀▀▀▄▄
-                        ░▐░░▐░░░░░▐░░░░░░░░░█░▄█▀
-                        ░▐▄▄▌░░░░░▐▄▄░░░░░░█░░▄▄▀▀▀▀▄
-                        ░░░░▌░░░░▄▀▒▒▀▀▀▀▄▀░▄▀░▄▄▄▀▀
-                        ░░░▐░░░░▐▒▒▒▒▒▒▒▒▀▀▄░░▀▄▄▄░▄
-                        ░░░▐░░░░▐▄▒▒▒▒▒▒▒▒▒▒▀▄░▄▄▀▀
-                        ░░░░▀▄░░░░▀▄▒▒▒▒▒▒▒▒▒▒▀▄░
-                        ░░░░░▀▄▄░░░█▄▄▄▄▄▄▄▄▄▄▄▀▄
-                        ░░░░░░░░▀▀▀▄▄▄▄▄▄▄▄▀▀░
-                        ░░░░░░░░░░░▌▌░▌▌
-                        ░░░░░░░░░▄▄▌▌▄▌▌
-    ");
-    println!("                     Avtan server starting on {}", url);
+    print_console_avtan(&url);
 
     let data = web::Data::new(initialize_graph_collection());
 
@@ -51,6 +34,7 @@ async fn create_graph(data: web::Data<common_model::GraphCollectionFacade>, body
     HttpResponse::Ok().body(answer)
 }
 
+/// Healthcheck endpoint
 #[get("/avtan")]
 async fn hi() -> impl Responder {
     HttpResponse::Ok().body("
@@ -79,4 +63,26 @@ fn initialize_graph_collection() -> common_model::GraphCollectionFacade {
     common_model::GraphCollectionFacade {
         in_memory_graph_collection: Arc::new(Mutex::new(Vec::new()))
     }
+}
+
+/// Print avtan greeting
+fn print_console_avtan(url: &&str)  {
+    println!("
+                        ░░░░░░░░▄▀▀▄
+                        ░░░░░▄▀▒▒▒▒▀▄
+                        ░░░░░░▀▌▒▒▐▀ 
+                        ▄███▀░◐░░░▌   
+                        ░░▐▀▌░░░░░▐░░░░░░░░░▄▀▀▀▄▄
+                        ░▐░░▐░░░░░▐░░░░░░░░░█░▄█▀
+                        ░▐▄▄▌░░░░░▐▄▄░░░░░░█░░▄▄▀▀▀▀▄
+                        ░░░░▌░░░░▄▀▒▒▀▀▀▀▄▀░▄▀░▄▄▄▀▀
+                        ░░░▐░░░░▐▒▒▒▒▒▒▒▒▀▀▄░░▀▄▄▄░▄
+                        ░░░▐░░░░▐▄▒▒▒▒▒▒▒▒▒▒▀▄░▄▄▀▀
+                        ░░░░▀▄░░░░▀▄▒▒▒▒▒▒▒▒▒▒▀▄░
+                        ░░░░░▀▄▄░░░█▄▄▄▄▄▄▄▄▄▄▄▀▄
+                        ░░░░░░░░▀▀▀▄▄▄▄▄▄▄▄▀▀░
+                        ░░░░░░░░░░░▌▌░▌▌
+                        ░░░░░░░░░▄▄▌▌▄▌▌
+    ");
+    println!("                     Avtan server starting on {}", url);
 }
