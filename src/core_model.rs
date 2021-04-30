@@ -50,7 +50,7 @@ impl InMemoryGraph {
 
     /// Add Node to Graph
     fn add_node(&mut self, mut node: Node) -> Result<(), ()> {
-        if node.label.is_empty() {
+        if node.label.trim().is_empty() {
             return Err(());
         }
 
@@ -73,13 +73,13 @@ impl InMemoryGraph {
     }
 
     /// Add Bond to Graph
-    fn add_bond(mut self, mut bond: Bond) -> Result<(), ()> {
+    fn add_bond(&mut self, mut bond: Bond) -> Result<(), ()> {
         if bond.src == 0 || bond.dst == 0 {
             return Err(());
         }
 
         // Check if bond label not empty
-        if bond.label.is_empty() {
+        if bond.label.trim().is_empty() {
             return Err(());
         }
 
@@ -263,7 +263,7 @@ mod in_memory_graph_tests {
     }
 
     #[test]
-    fn add_node_to_non_empty_graph_not_zero_id() {
+    fn add_node_to_non_empty_graph_not_zero_id_passed() {
         let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
 
         in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
@@ -328,7 +328,7 @@ mod in_memory_graph_tests {
         in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
         in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
 
-        let adding_node = super::Node {id: 1, label: String::from(" ")};
+        let adding_node = super::Node {id: 2, label: String::from(" ")};
         let adding_result = in_mem_graph.add_node(adding_node);
 
         let is_node_added = in_mem_graph.nodes_collection.iter()
@@ -337,6 +337,60 @@ mod in_memory_graph_tests {
         assert_eq!(true, adding_result.is_err());
         assert_eq!(false, is_node_added);
         assert_eq!(2, in_mem_graph.nodes_collection.len());
+    }
+
+    #[test]
+    fn add_bonds_to_graph_passed() {
+        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 2, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 4, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 5, label: String::from("blue")});
+
+        in_mem_graph.bonds_collection.push(super::Bond {label: String::from("green-green"), src: 2, dst: 4, id: 0});
+        in_mem_graph.bonds_collection.push(super::Bond {label: String::from("green-green"), src: 3, dst: 2, id: 0});
+        in_mem_graph.bonds_collection.push(super::Bond {label: String::from("green-green"), src: 1, dst: 5, id: 0});
+
+        let adding_bond = super::Bond {label: String::from("green-green"), src: 1, dst: 2, id: 0};
+        let adding_result = in_mem_graph.add_bond(adding_bond);
+
+        assert_eq!(true, adding_result.is_ok());
+        assert_eq!(4, in_mem_graph.bonds_collection.len());
+    }
+
+
+    #[test]
+    fn add_bonds_to_graph_non_existing_node_failed() {
+        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 2, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 4, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 5, label: String::from("blue")});
+
+        let adding_bond = super::Bond {label: String::from("green-green"), src: 10, dst: 2, id: 0};
+        let adding_result = in_mem_graph.add_bond(adding_bond);
+
+        assert_eq!(true, adding_result.is_err());
+        assert_eq!(0, in_mem_graph.bonds_collection.len());
+    }
+
+    #[test]
+    fn add_bonds_to_graph_empty_label_failed() {
+        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 2, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 4, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 5, label: String::from("blue")});
+
+
+        let adding_bond = super::Bond {label: String::from(" "), src: 1, dst: 2, id: 0};
+        let adding_result = in_mem_graph.add_bond(adding_bond);
+
+        assert_eq!(true, adding_result.is_err());
+        assert_eq!(0, in_mem_graph.bonds_collection.len());
     }
 }
 
