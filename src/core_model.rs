@@ -30,8 +30,8 @@ pub struct Node {
 pub struct Bond {
     id: u32,
     label: String,
-    src: i32,
-    dst: i32
+    src: u32,
+    dst: u32
 }
 
 impl InMemoryGraph {
@@ -48,12 +48,13 @@ impl InMemoryGraph {
     }
 
 
+    /// Add Node to Graph
     fn add_node(&mut self, mut node: Node) -> Result<(), ()> {
         if node.label.is_empty() {
             return Err(());
         }
 
-        // create array of existing indexes
+        // Create array of existing indexes
         let mut id_vec: Vec<u32> = self.nodes_collection.iter()
                                                                 .map(|x| x.id)
                                                                 .collect();
@@ -68,6 +69,36 @@ impl InMemoryGraph {
         }
 
         self.nodes_collection.push(node);
+        Ok(())
+    }
+
+    /// Add Bond to Graph
+    fn add_bond(mut self, mut bond: Bond) -> Result<(), ()> {
+        if bond.src == 0 || bond.dst == 0 {
+            return Err(());
+        }
+
+        // Check if bond label not empty
+        if bond.label.is_empty() {
+            return Err(());
+        }
+
+        // Check if src and dst exist in nodes:
+        let is_src_exists = self.nodes_collection.iter().any(|x| x.id == bond.src);
+        let is_dst_exists = self.nodes_collection.iter().any(|x| x.id == bond.dst);
+
+        if !is_src_exists || !is_dst_exists {
+            return Err(());
+        }
+
+        // Generate bond id
+        let mut id_vec: Vec<u32> = self.bonds_collection.iter()
+                                            .map(|x| x.id)
+                                            .collect();
+
+        bond.id = helpers::get_lowest_unexisting_number(&mut id_vec);
+
+        self.bonds_collection.push(bond);
         Ok(())
     }
 
@@ -139,6 +170,9 @@ mod helpers {
 }
 
 
+//======================================================================================================================
+//======================================================================================================================
+//======================================================================================================================
 // TESTS:
 #[cfg(test)]
 mod in_memory_graph_tests {
