@@ -102,9 +102,13 @@ impl InMemoryGraph {
         Ok(())
     }
 
+    fn get_connected_nodes_by_depth(&self, node_id: u32, depth: u32){
+        todo!();
+    }
+
     /// Drops Whole Graph
     pub fn delete_graph(self){
-        drop(self);
+        todo!();
     }
 }
 //  Main Graph action Methods impl
