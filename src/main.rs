@@ -25,18 +25,24 @@ async fn main() -> std::io::Result<()> {
 }
 
 async fn create_graph(data: web::Data<core_model::GraphCollectionFacade>, body: String) -> impl Responder {
-    let mut graph_collection = data.in_memory_graph_collection.lock().unwrap();
+
     let result: Result<core_model::CreateGraphDTO> = serde_json::from_str(&body.to_string());
     let dto = result.unwrap();
-    
+    let mut len: usize = 0;
+          
     match core_model::validate_and_map_graph(dto, data.clone()) {
-        Err(_) => {},
+        Err(_) => {
+            let graph_collection = data.in_memory_graph_collection.lock().unwrap();
+            len = graph_collection.len();
+        },
         Ok(img) => {
-            //data.clone().in_memory_graph_collection.push(img)
+            let mut graph_collection = data.in_memory_graph_collection.lock().unwrap();
+            graph_collection.push(img);
+            len = graph_collection.len();
         }
     }
-
-    let answer  = format!("number is: {} body is \"{}\"", graph_collection.len(), body);
+  
+    let answer  = format!("number is: {} body is \"{}\"", len, body);
     HttpResponse::Ok().body(answer)
 }
 
