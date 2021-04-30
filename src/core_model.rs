@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::sync::Mutex;
 use serde::{Serialize, Deserialize};
-use actix_web::{web};
+use actix_web::web;
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateGraphDTO {
@@ -42,6 +42,35 @@ impl InMemoryGraph {
                     bonds_collection: Vec::new()}
     }
 
+    // Maps new empty Graph from DTO
+    pub fn new_graph_from_dto(dto: CreateGraphDTO) -> Self {
+        todo!()
+    }
+
+
+    fn add_node(&mut self, mut node: Node) -> Result<(), ()> {
+        if node.label.is_empty() {
+            return Err(());
+        }
+
+        // create array of existing indexes
+        let mut id_vec: Vec<u32> = self.nodes_collection.iter()
+                                                                .map(|x| x.id)
+                                                                .collect();
+
+        if node.id == 0 {
+            node.id = helpers::get_lowest_unexisting_number(&mut id_vec);
+        }
+        
+        // TODO - CHANGE TO SEARCH TREE VALIDATION TO IMPROVE PERFOMANCE
+        if id_vec.iter().any(|&x | x == node.id){
+            return Err(());
+        }
+
+        self.nodes_collection.push(node);
+        Ok(())
+    }
+
     /// Drops Whole Graph
     pub fn delete_graph(self){
         drop(self);
@@ -59,6 +88,12 @@ impl Graph for InMemoryGraph {
     fn create_bond(&mut self, bond: Bond) -> Result<(), ()> {
         self.bonds_collection.push(bond);
         Ok(())
+    }
+}
+
+impl Node {
+    fn new(id: u32, label: String) -> Self {
+        Node {id, label}
     }
 }
 
@@ -82,20 +117,34 @@ pub fn validate_and_map_graph(dto: CreateGraphDTO,
     Ok(graph)
 }   
 
+mod helpers {
+    pub fn get_lowest_unexisting_number(vector: &mut Vec<u32>) -> u32 {
+        vector.sort();
+        let len = vector.len();
 
+        if len < 1 || vector[0] != 1 {
+            return 1;    
+        } 
 
+        let mut prev = 1;
+        for i in  1..len {
+            if (vector[i] - prev) > 1 {
+                return prev + 1;
+            }
+            prev = vector[i];
+        }
 
-
+        return vector[len - 1] + 1;
+    }
+}
 
 
 // TESTS:
-
-
 #[cfg(test)]
-mod tests {
+mod in_memory_graph_tests {
     use std::sync::Arc;
     use std::sync::Mutex;
-    use actix_web::{web};
+    use actix_web::web;
 
     fn initialize_graph_collection() -> super::GraphCollectionFacade {
         super::GraphCollectionFacade {
@@ -105,7 +154,6 @@ mod tests {
 
     #[test]
     fn validate_and_map_graph_passed() {
-        
         let data = web::Data::new(initialize_graph_collection());
         let dto = super::CreateGraphDTO {name: String::from("my_new_graph_name")};
         let result = super::validate_and_map_graph(dto, data.clone());
@@ -145,5 +193,148 @@ mod tests {
 
         let result = super::validate_and_map_graph(dto, data.clone());
         assert_eq!(true, result.is_err());
+    }
+
+    #[test]
+    fn add_node_to_empty_graph_passed() {
+        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+        let node = super::Node {id: 0, label: String::from("red")};
+        let adding_result = in_mem_graph.add_node(node);
+
+        assert_eq!(true, adding_result.is_ok());
+        assert_eq!(1, in_mem_graph.nodes_collection.len());
+    }
+
+    #[test]
+    fn add_node_to_non_empty_graph_passed() {
+        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+
+        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
+
+        let addong_node = super::Node {id: 0, label: String::from("red")};
+        let adding_result = in_mem_graph.add_node(addong_node);
+
+        let added_nodes:Vec<u32> = in_mem_graph.nodes_collection.iter()
+                                                               .filter(|x| x.label == String::from("red"))
+                                                               .map(|x| x.id)
+                                                               .collect();
+
+        let index = added_nodes[0];
+
+        assert_eq!(true, adding_result.is_ok());
+        assert_eq!(3, in_mem_graph.nodes_collection.len());
+        assert_eq!(2, index);
+        assert_eq!(1, added_nodes.len());
+    }
+
+    #[test]
+    fn add_node_to_non_empty_graph_not_zero_id() {
+        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+
+        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
+
+        let addong_node = super::Node {id: 4, label: String::from("red")};
+        let adding_result = in_mem_graph.add_node(addong_node);
+
+        let added_nodes:Vec<u32> = in_mem_graph.nodes_collection.iter()
+                                                               .filter(|x| x.label == String::from("red"))
+                                                               .map(|x| x.id)
+                                                               .collect();
+
+        let index = added_nodes[0];
+
+        assert_eq!(true, adding_result.is_ok());
+        assert_eq!(3, in_mem_graph.nodes_collection.len());
+        assert_eq!(4, index);
+        assert_eq!(1, added_nodes.len());
+    }
+
+    #[test]
+    fn add_node_to_non_empty_graph_id_exists_failed() {
+        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+
+        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
+
+        let adding_node = super::Node {id: 1, label: String::from("red")};
+        let adding_result = in_mem_graph.add_node(adding_node);
+
+        let is_node_added = in_mem_graph.nodes_collection.iter()
+                                                            .any(|x| x.label == String::from("red"));
+
+        assert_eq!(true, adding_result.is_err());
+        assert_eq!(false, is_node_added);
+        assert_eq!(2, in_mem_graph.nodes_collection.len());
+    }
+
+    #[test]
+    fn add_node_blank_label_failed() {
+        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+
+        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
+
+        let adding_node = super::Node {id: 1, label: String::from("")};
+        let adding_result = in_mem_graph.add_node(adding_node);
+
+        let is_node_added = in_mem_graph.nodes_collection.iter()
+                                                            .any(|x| x.label == String::from(""));
+
+        assert_eq!(true, adding_result.is_err());
+        assert_eq!(false, is_node_added);
+        assert_eq!(2, in_mem_graph.nodes_collection.len());
+    }
+
+    #[test]
+    fn add_node_space_label_failed() {
+        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+
+        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
+        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
+
+        let adding_node = super::Node {id: 1, label: String::from(" ")};
+        let adding_result = in_mem_graph.add_node(adding_node);
+
+        let is_node_added = in_mem_graph.nodes_collection.iter()
+                                                            .any(|x| x.label == String::from(" "));
+
+        assert_eq!(true, adding_result.is_err());
+        assert_eq!(false, is_node_added);
+        assert_eq!(2, in_mem_graph.nodes_collection.len());
+    }
+}
+
+#[cfg(test)]
+mod helper_tests {
+    use super::helpers;
+
+    #[test]
+    fn get_allready_sorted_vec_passed() {
+        let mut vector = vec![1, 2, 3, 4, 5, 6];
+        let last = helpers::get_lowest_unexisting_number(&mut vector);
+        assert_eq!(7, last);
+    }
+
+    #[test]
+    fn get_unsorted_vec_passed() {
+        let mut vector = vec![4, 1, 55, 2, 5, 3, 6, 8, 9];
+        let last = helpers::get_lowest_unexisting_number(&mut vector);
+        assert_eq!(7, last);
+    }
+
+    #[test]
+    fn get_without_1_passed() {
+        let mut vector = vec![4, 55, 2, 5, 3, 6, 8, 9];
+        let last = helpers::get_lowest_unexisting_number(&mut vector);
+        assert_eq!(1, last);
+    }
+
+    #[test]
+    fn get_from_empty_vec() {
+        let mut vector = Vec::<u32>::new();
+        let last = helpers::get_lowest_unexisting_number(&mut vector);
+        assert_eq!(1, last);
     }
 }

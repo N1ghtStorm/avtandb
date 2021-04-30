@@ -28,22 +28,22 @@ async fn create_graph(data: web::Data<core_model::GraphCollectionFacade>, body: 
 
     let result: Result<core_model::CreateGraphDTO> = serde_json::from_str(&body.to_string());
     let dto = result.unwrap();
-    let mut len: usize = 0;
           
-    match core_model::validate_and_map_graph(dto, data.clone()) {
+    return match core_model::validate_and_map_graph(dto, data.clone()) {
         Err(_) => {
             let graph_collection = data.in_memory_graph_collection.lock().unwrap();
-            len = graph_collection.len();
+            let len = graph_collection.len();
+            let answer  = format!("failed creating graph number is: {} body is \"{}\"", len, body);
+            HttpResponse::Conflict().body(answer)
         },
         Ok(img) => {
             let mut graph_collection = data.in_memory_graph_collection.lock().unwrap();
             graph_collection.push(img);
-            len = graph_collection.len();
+            let len = graph_collection.len();
+            let answer  = format!("number is: {} body is \"{}\"", len, body);
+            HttpResponse::Ok().body(answer)
         }
-    }
-  
-    let answer  = format!("number is: {} body is \"{}\"", len, body);
-    HttpResponse::Ok().body(answer)
+    };
 }
 
 /// Healthcheck endpoint
