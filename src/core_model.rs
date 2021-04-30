@@ -8,11 +8,27 @@ pub struct CreateGraphDTO {
     pub name: String
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct ReturnNodeDTO {
+    pub id: u32,
+    pub label: String,
+    pub bonds: Option<Vec<ReturnBondDTO>>
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ReturnBondDTO {
+    pub id: u32,
+    pub label: String,
+    pub src: u32,
+    pub dst: u32
+}
+
 pub trait Graph {
     fn create_node(&mut self, node: Node) -> Result<(), ()>;
     fn create_bond(&mut self, bond: Bond) -> Result<(), ()>;
 } 
 /// Main Graph Model
+#[derive(Debug)]
 pub struct InMemoryGraph {
     pub name: String,
     pub nodes_collection: Vec<Node>,
@@ -20,19 +36,22 @@ pub struct InMemoryGraph {
 }    
     
 /// Main Node(Vertex) document collection element 
+#[derive(Debug)]
 pub struct Node {
-    id: u32,
-    label: String
+    pub id: u32,
+    pub label: String
     // TODO Create properties as JSON document
 }
 
 /// Main Bond(Relation) document collection element
+#[derive(Debug)]
 pub struct Bond {
-    id: u32,
-    label: String,
-    src: u32,
-    dst: u32
+    pub id: u32,
+    pub label: String,
+    pub src: u32,
+    pub dst: u32
 }
+
 
 impl InMemoryGraph {
     /// Creates new empty Graph
