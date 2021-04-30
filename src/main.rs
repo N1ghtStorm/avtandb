@@ -1,18 +1,10 @@
 use std::sync::Arc;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use std::sync::Mutex;
+use serde::{Serialize, Deserialize};
+use serde_json::Result;
 
-#[path = "./datamodel/core_model.rs"]
 mod core_model;
-
-#[path = "./datamodel/common_model.rs"]
-mod common_model;
-
-#[path = "./common_graph_services/in_memory_graph_service.rs"]
-mod in_memory_graph_service;
-
-#[path = "./apimodel/manage_graph_models.rs"]
-pub mod manage_graph_models;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -32,12 +24,18 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-async fn create_graph(data: web::Data<common_model::GraphCollectionFacade>, body: String) -> impl Responder {
+async fn create_graph(data: web::Data<core_model::GraphCollectionFacade>, body: String) -> impl Responder {
     let mut graph_collection = data.in_memory_graph_collection.lock().unwrap();
-    let graph = common_model::core_model::InMemoryGraph::new_graph("aaa");
-    // let graph = in_memory_graph_service::create_graph(in_memory_graph_service::manage_graph_models::CreateGraphDTO {name: String::from("asd")},
-    //                                                              data.clone());
-    // graph_collection.push(graph);
+    let result: Result<core_model::CreateGraphDTO> = serde_json::from_str(&body.to_string());
+    let dto = result.unwrap();
+    
+    match core_model::validate_and_map_graph(dto, data.clone()) {
+        Err(_) => {},
+        Ok(img) => {
+            //data.clone().in_memory_graph_collection.push(img)
+        }
+    }
+
     let answer  = format!("number is: {} body is \"{}\"", graph_collection.len(), body);
     HttpResponse::Ok().body(answer)
 }
@@ -67,8 +65,8 @@ AVTAN DB IS RUNNING!!! KOKOKOKOKOKOKOKOKOKO!!!!! KOKOK!!! POKPOKPOK!!!!!
 }
 
 /// initialize common graph collection for all programm lifetime
-fn initialize_graph_collection() -> common_model::GraphCollectionFacade {
-    common_model::GraphCollectionFacade {
+fn initialize_graph_collection() -> core_model::GraphCollectionFacade {
+    core_model::GraphCollectionFacade {
         in_memory_graph_collection: Arc::new(Mutex::new(Vec::new()))
     }
 }
