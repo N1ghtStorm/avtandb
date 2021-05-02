@@ -4,6 +4,7 @@ use std::sync::Mutex;
 use serde_json::Result;
 
 mod core_model;
+mod kv_model;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
