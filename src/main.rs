@@ -52,7 +52,7 @@ async fn hi() -> impl Responder {
                             '||T
                             / |
                           __   _
-AVTAN DB IS RUNNING!!! KOKOKOKO!!!!! KOKOK!!!!!!!! BAM BAM BAM!!!
+           AVTAN DB IS RUNNING!!! KOKOKOKO!!!!! ;)
     ")
 }
 

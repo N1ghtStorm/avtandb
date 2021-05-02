@@ -51,12 +51,44 @@ impl KVStore for InMemoryKVStore {
     }
 }
 
+// Stores KV on filesystem
+pub struct DurableKVStore {
+}
+
+impl DurableKVStore {
+    fn new() -> Self {
+        DurableKVStore {}
+    }
+}
+
+
+impl KVStore for DurableKVStore {
+    /// Add value to storage
+    fn add_value(&mut self, key: String, value: String) -> Result<(), ()> {
+        todo!();
+    }
+
+    /// Get value
+    fn get_value(&self, key: String) -> Result<Arc<String>, ()> {
+        todo!();
+    }
+
+    fn remove_key(&self, key: String) -> Result<(),()> {
+        todo!();
+    }
+
+    fn update_value(&mut self, key: String, value: String) -> Result<(),()> {
+        todo!();
+    }
+}
+
+/// To choose which KV type to use
 pub enum KVType {
     INMemory,
     Durable
 }
 
-fn CreateKVStoreFactory(kv_type: KVType) -> impl KVStore {
+fn KVStoreFactory(kv_type: KVType) -> impl KVStore {
     return match kv_type {
         INMemory => InMemoryKVStore::new(),
         Durable => todo!()
