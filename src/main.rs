@@ -3,6 +3,7 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use std::sync::Mutex;
 use serde_json::Result;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 mod core_model;
 mod kv_model;
@@ -89,13 +90,13 @@ fn initialize_kv_store() -> kv_model::KVStore {
     
     ".to_string();
     let mut hm = HashMap::new();
-    hm.insert(key_1, val_1);
+    hm.insert(key_1, Arc::new(val_1));
     kv_model::KVStore{kv_hash_map: Arc::new(Mutex::new(hm))}
 }
 
 async fn get_test_val_by_key(data: web::Data<kv_model::KVStore>) -> impl Responder {
     let aaa = data.get_value("foo".to_string()).unwrap();
-    HttpResponse::Ok().body(aaa)
+    HttpResponse::Ok().body(format!("{}",aaa))
 }
 
 async fn create_graph(data: web::Data<core_model::GraphCollectionFacade>, body: String) -> impl Responder {
