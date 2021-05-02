@@ -2,19 +2,28 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::collections::HashMap;
 
+pub trait KVStore {
+    fn add_value(&mut self, key: String, value: String) -> Result<(), ()>;
+    fn get_value(&self, key: String) -> Result<Arc<String>, ()>;
+    fn remove_key(&self, key: String) -> Result<(),()>;
+    fn update_value(&mut self, key: String, value: String) -> Result<(),()>;
+}
+
 /// Facade over main hash map
-pub struct KVStore {
+pub struct InMemoryKVStore {
     pub kv_hash_map: Arc<Mutex<HashMap<String, Arc<String>>>>
 }
 
-impl KVStore {
+impl InMemoryKVStore {
     /// ctor
     pub fn new() -> Self {
-        KVStore { kv_hash_map: Arc::new(Mutex::new(HashMap::new())) }
+        InMemoryKVStore { kv_hash_map: Arc::new(Mutex::new(HashMap::new())) }
     }
+}
 
+impl KVStore for InMemoryKVStore {
     /// Add value to storage
-    pub fn add_value(&mut self, key: String, value: String) -> Result<(), ()> {
+    fn add_value(&mut self, key: String, value: String) -> Result<(), ()> {
         // NOT SURE IF self....lock() - is a good idea
         let mut hash_map = self.kv_hash_map.lock().unwrap();
         hash_map.insert(key, Arc::new(value));
@@ -22,7 +31,7 @@ impl KVStore {
     }
 
     /// Get value
-    pub fn get_value(&self, key: String) -> Result<Arc<String>, ()> {
+    fn get_value(&self, key: String) -> Result<Arc<String>, ()> {
         // NOT SURE IF self....lock() - is a good idea
         let hash_map = self.kv_hash_map.lock().unwrap();
         let val = hash_map.get(&key);
@@ -33,11 +42,23 @@ impl KVStore {
         };
     }
 
-    pub fn remove_key() -> Result<(),()> {
+    fn remove_key(&self, key: String) -> Result<(),()> {
         todo!();
     }
 
-    pub fn update_value() -> Result<(),()> {
+    fn update_value(&mut self, key: String, value: String) -> Result<(),()> {
         todo!();
     }
+}
+
+pub enum KVType {
+    INMemory,
+    Durable
+}
+
+fn CreateKVStoreFactory(kv_type: KVType) -> impl KVStore {
+    return match kv_type {
+        INMemory => InMemoryKVStore::new(),
+        Durable => todo!()
+    };
 }

@@ -76,7 +76,7 @@ fn initialize_graph_collection() -> core_model::GraphCollectionFacade {
 }
 
 // initialize kv store for all programm lifetime
-fn initialize_test_kv_store() -> kv_model::KVStore {
+fn initialize_test_kv_store() -> kv_model::InMemoryKVStore {
     //kv_model::KVStore::new()
     let key_1 = "foo".to_string();
     let val_1 = 
@@ -87,10 +87,10 @@ fn initialize_test_kv_store() -> kv_model::KVStore {
     } ".to_string();
     let mut hm = HashMap::new();
     hm.insert(key_1, Arc::new(val_1));
-    kv_model::KVStore{kv_hash_map: Arc::new(Mutex::new(hm))}
+    kv_model::InMemoryKVStore{kv_hash_map: Arc::new(Mutex::new(hm))}
 }
 
-async fn get_test_val_by_key(data: web::Data<kv_model::KVStore>) -> impl Responder {
+async fn get_test_val_by_key(data: web::Data<dyn kv_model::KVStore>) -> impl Responder {
     let aaa = data.get_value("foo".to_string()).unwrap();
     HttpResponse::Ok().body(format!("{}",aaa))
 }
