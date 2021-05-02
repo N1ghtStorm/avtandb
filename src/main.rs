@@ -3,7 +3,6 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use std::sync::Mutex;
 use serde_json::Result;
 use std::collections::HashMap;
-use std::rc::Rc;
 
 mod core_model;
 mod kv_model;
@@ -14,7 +13,7 @@ async fn main() -> std::io::Result<()> {
     print_console_avtan(&url);
 
     let graph_data = web::Data::new(initialize_graph_collection());
-    let kv_data = web::Data::new(initialize_kv_store());
+    let kv_data = web::Data::new(initialize_test_kv_store());
 
     HttpServer::new( move || {
         App::new()
@@ -53,7 +52,7 @@ async fn hi() -> impl Responder {
                             '||T
                             / |
                           __   _
-AVTAN DB IS RUNNING!!! KOKOKOKO!!!!! KOKOK!!! 🦀🐔🐔🐔🐔🐔🐔🐔🐔🦀!!!!!
+AVTAN DB IS RUNNING!!! KOKOKOKO!!!!! KOKOK!!!!!!!! BAM BAM BAM!!!
     ")
 }
 
@@ -77,18 +76,15 @@ fn initialize_graph_collection() -> core_model::GraphCollectionFacade {
 }
 
 // initialize kv store for all programm lifetime
-fn initialize_kv_store() -> kv_model::KVStore {
+fn initialize_test_kv_store() -> kv_model::KVStore {
     //kv_model::KVStore::new()
     let key_1 = "foo".to_string();
     let val_1 = 
-    "
-        {
-            \"a\": 1,
-            \"b\": \"asd\",
-            \"arr\": [{},{},{\"lol\": 20}]
-        }
-    
-    ".to_string();
+    "{
+        \"a\": 1,
+        \"b\": \"asd\",
+        \"arr\": [{},{},{\"lol\": 20}]
+    } ".to_string();
     let mut hm = HashMap::new();
     hm.insert(key_1, Arc::new(val_1));
     kv_model::KVStore{kv_hash_map: Arc::new(Mutex::new(hm))}
@@ -158,5 +154,6 @@ fn print_console_avtan(url: &&str)  {
                         ░░░░░░░░░░░▌▌░▌▌
                         ░░░░░░░░░▄▄▌▌▄▌▌
     ");
-    println!("                     Avtan server starting on {}", url);
+    println!("                           🦀🐔🐔🐔🐔🐔🐔🐔🐔🦀
+                    Avtan server starting on {}", url);
 }

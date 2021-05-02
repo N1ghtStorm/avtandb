@@ -1,17 +1,19 @@
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::collections::HashMap;
-use std::rc::Rc;
 
+/// Facade over main hash map
 pub struct KVStore {
     pub kv_hash_map: Arc<Mutex<HashMap<String, Arc<String>>>>
 }
 
 impl KVStore {
+    /// ctor
     pub fn new() -> Self {
         KVStore { kv_hash_map: Arc::new(Mutex::new(HashMap::new())) }
     }
 
+    /// Add value to storage
     pub fn add_value(&mut self, key: String, value: String) -> Result<(), ()> {
         // NOT SURE IF self....lock() - is a good idea
         let mut hash_map = self.kv_hash_map.lock().unwrap();
@@ -19,6 +21,7 @@ impl KVStore {
         Ok(())
     }
 
+    /// Get value
     pub fn get_value(&self, key: String) -> Result<Arc<String>, ()> {
         // NOT SURE IF self....lock() - is a good idea
         let hash_map = self.kv_hash_map.lock().unwrap();
@@ -28,5 +31,13 @@ impl KVStore {
             Some(inner_val) => Ok(inner_val.clone()),
             None => Err(())
         };
+    }
+
+    pub fn remove_key() -> Result<(),()> {
+        todo!();
+    }
+
+    pub fn update_value() -> Result<(),()> {
+        todo!();
     }
 }
