@@ -5,7 +5,7 @@ use std::collections::HashMap;
 pub trait KVStore {
     fn add_value(&mut self, key: String, value: String) -> Result<(), ()>;
     fn get_value(&self, key: String) -> Result<Arc<String>, ()>;
-    fn remove_key(&self, key: String) -> Result<(),()>;
+    fn remove_key(&mut self, key: String) -> Result<(),()>;
     fn update_value(&mut self, key: String, value: String) -> Result<(),()>;
 }
 
@@ -42,7 +42,7 @@ impl KVStore for InMemoryKVStore {
         };
     }
 
-    fn remove_key(&self, key: String) -> Result<(),()> {
+    fn remove_key(&mut self, key: String) -> Result<(),()> {
         todo!();
     }
 
@@ -57,13 +57,12 @@ pub struct DurableKVStore {
 
 impl DurableKVStore {
     fn new() -> Self {
-        DurableKVStore {}
+        todo!();
     }
 }
 
-
 impl KVStore for DurableKVStore {
-    /// Add value to storage
+    /// Add value to disk storage
     fn add_value(&mut self, key: String, value: String) -> Result<(), ()> {
         todo!();
     }
@@ -73,7 +72,7 @@ impl KVStore for DurableKVStore {
         todo!();
     }
 
-    fn remove_key(&self, key: String) -> Result<(),()> {
+    fn remove_key(&mut self, key: String) -> Result<(),()> {
         todo!();
     }
 
@@ -88,9 +87,12 @@ pub enum KVType {
     Durable
 }
 
-fn KVStoreFactory(kv_type: KVType) -> impl KVStore {
-    return match kv_type {
-        INMemory => InMemoryKVStore::new(),
-        Durable => todo!()
-    };
-}
+// fn KVStoreFactory(kv_type: KVType) -> impl KVStore {
+//     let a:dyn KVStore =  match kv_type {
+//         KVType::INMemory => InMemoryKVStore::new(),
+//         KVType::Durable => DurableKVStore::new(),
+//         _ => todo!()
+//     };
+
+//     return a;
+// }
