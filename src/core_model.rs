@@ -68,7 +68,7 @@ impl InMemoryGraph {
 
 
     /// Add Node to Graph
-    fn add_node(&mut self, mut node: Node) -> Result<(), ()> {
+    pub fn add_node(&mut self, mut node: Node) -> Result<(), ()> {
         if node.label.trim().is_empty() {
             return Err(());
         }
@@ -123,6 +123,13 @@ impl InMemoryGraph {
 
     fn get_connected_nodes_by_depth(&self, node_id: u32, depth: u32){
         todo!();
+    }
+
+    fn get_paths_between_ids(&self, start_id: u32, finish_id: u32) -> Result<Vec<Vec<u32>>, ()>{
+        let paths = Vec::new();
+
+
+        Ok(paths)
     }
 
     /// Drops Whole Graph
