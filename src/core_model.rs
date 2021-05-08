@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use serde::{Serialize, Deserialize};
 use actix_web::web;
+use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateGraphDTO {
@@ -32,7 +33,8 @@ pub trait Graph {
 pub struct InMemoryGraph {
     pub name: String,
     pub nodes_collection: Vec<Node>,
-    pub bonds_collection: Vec<Bond>
+    pub bonds_collection: Vec<Bond>,
+    nodes_id_index: BTreeMap<u32, usize>
 }    
     
 /// Main Node(Vertex) document collection element 
@@ -58,7 +60,8 @@ impl InMemoryGraph {
     pub fn new_graph(name: String) -> Self {
         InMemoryGraph {name, 
                     nodes_collection: Vec::new(), 
-                    bonds_collection: Vec::new()}
+                    bonds_collection: Vec::new(),
+                    nodes_id_index: BTreeMap::new()}
     }
 
     // Maps new empty Graph from DTO
@@ -261,7 +264,8 @@ mod in_memory_graph_tests {
 
     #[test]
     fn add_node_to_empty_graph_passed() {
-        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
+        
         let node = super::Node {id: 0, label: String::from("red")};
         let adding_result = in_mem_graph.add_node(node);
 
@@ -271,7 +275,7 @@ mod in_memory_graph_tests {
 
     #[test]
     fn add_node_to_non_empty_graph_passed() {
-        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
 
         in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
         in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
@@ -294,7 +298,7 @@ mod in_memory_graph_tests {
 
     #[test]
     fn add_node_to_non_empty_graph_not_zero_id_passed() {
-        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
 
         in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
         in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
@@ -317,7 +321,7 @@ mod in_memory_graph_tests {
 
     #[test]
     fn add_node_to_non_empty_graph_id_exists_failed() {
-        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
 
         in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
         in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
@@ -335,7 +339,7 @@ mod in_memory_graph_tests {
 
     #[test]
     fn add_node_blank_label_failed() {
-        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
 
         in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
         in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
@@ -353,7 +357,7 @@ mod in_memory_graph_tests {
 
     #[test]
     fn add_node_space_label_failed() {
-        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
 
         in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
         in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
@@ -371,7 +375,7 @@ mod in_memory_graph_tests {
 
     #[test]
     fn add_bonds_to_graph_passed() {
-        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
         in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
         in_mem_graph.nodes_collection.push(super::Node {id: 2, label: String::from("green")});
         in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
@@ -392,7 +396,7 @@ mod in_memory_graph_tests {
 
     #[test]
     fn add_bonds_to_graph_non_existing_node_failed() {
-        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
         in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
         in_mem_graph.nodes_collection.push(super::Node {id: 2, label: String::from("green")});
         in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
@@ -408,7 +412,7 @@ mod in_memory_graph_tests {
 
     #[test]
     fn add_bonds_to_graph_empty_label_failed() {
-        let mut in_mem_graph = super::InMemoryGraph{name: String::from("MyGraph"), nodes_collection: Vec::new(), bonds_collection: Vec::new()};
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
         in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
         in_mem_graph.nodes_collection.push(super::Node {id: 2, label: String::from("green")});
         in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
