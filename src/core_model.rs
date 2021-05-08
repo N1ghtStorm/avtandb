@@ -84,18 +84,13 @@ impl InMemoryGraph {
         if node.id == 0 {
             node.id = helpers::get_lowest_unexisting_number(&mut id_vec);
         }
-        
-        // TODO - CHANGE TO SEARCH TREE VALIDATION TO IMPROVE PERFOMANCE
-        // if id_vec.iter().any(|&x | x == node.id){
-        //     return Err(());
-        // }
 
         if self.nodes_id_index.contains_key(&node.id) {
             return Err(());
         }
 
         let len = self.nodes_collection.len();
-        self.nodes_id_index.insert(node.id, len + 1);
+        self.nodes_id_index.insert(node.id, len);
         self.nodes_collection.push(node);
 
         Ok(())
@@ -280,6 +275,9 @@ mod in_memory_graph_tests {
         let node = super::Node {id: 0, label: String::from("red")};
         let adding_result = in_mem_graph.add_node(node);
 
+        let btree_node_id = in_mem_graph.nodes_id_index.get(&1);
+
+        assert_eq!(0, *btree_node_id.unwrap());
         assert_eq!(true, adding_result.is_ok());
         assert_eq!(1, in_mem_graph.nodes_collection.len());
     }
@@ -311,11 +309,11 @@ mod in_memory_graph_tests {
     fn add_node_to_non_empty_graph_not_zero_id_passed() {
         let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
 
-        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
+        let r1 = in_mem_graph.add_node(super::Node {id: 1, label: String::from("blue")});
+        let r2 = in_mem_graph.add_node(super::Node {id: 3, label: String::from("green")});
 
-        let addong_node = super::Node {id: 4, label: String::from("red")};
-        let adding_result = in_mem_graph.add_node(addong_node);
+        let adding_node = super::Node {id: 4, label: String::from("red")};
+        let adding_result = in_mem_graph.add_node(adding_node);
 
         let added_nodes:Vec<u32> = in_mem_graph.nodes_collection.iter()
                                                                .filter(|x| x.label == String::from("red"))
@@ -323,11 +321,33 @@ mod in_memory_graph_tests {
                                                                .collect();
 
         let index = added_nodes[0];
+        let node_vector_index = in_mem_graph.nodes_id_index.get(&4);
 
+        assert_eq!(2, *node_vector_index.unwrap());
+        assert!(r1.is_ok());
+        assert!(r2.is_ok());
         assert_eq!(true, adding_result.is_ok());
         assert_eq!(3, in_mem_graph.nodes_collection.len());
         assert_eq!(4, index);
         assert_eq!(1, added_nodes.len());
+    }
+
+    #[test]
+    fn add_nodes_to_graph_get_correct_index_id_passed() {
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
+
+        let r1 = in_mem_graph.add_node(super::Node {id: 1, label: String::from("blue")});
+        let r2 = in_mem_graph.add_node(super::Node {id: 3, label: String::from("green")});
+        let r3 = in_mem_graph.add_node(super::Node {id: 300, label: String::from("green")});
+        let r4 = in_mem_graph.add_node(super::Node {id: 0, label: String::from("green")});
+
+        let node_vector_index = in_mem_graph.nodes_id_index.get(&2);
+
+        assert_eq!(3, *node_vector_index.unwrap());
+        assert!(r1.is_ok());
+        assert!(r2.is_ok());
+        assert!(r3.is_ok());
+        assert!(r4.is_ok());
     }
 
     #[test]
