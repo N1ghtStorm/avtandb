@@ -32,8 +32,8 @@ pub trait Graph {
 #[derive(Debug)]
 pub struct InMemoryGraph {
     pub name: String,
-    pub nodes_collection: Vec<Node>,
-    pub bonds_collection: Vec<Bond>,
+    nodes_collection: Vec<Node>,
+    bonds_collection: Vec<Bond>,
     nodes_id_index: BTreeMap<u32, usize>
 }    
     
@@ -86,11 +86,18 @@ impl InMemoryGraph {
         }
         
         // TODO - CHANGE TO SEARCH TREE VALIDATION TO IMPROVE PERFOMANCE
-        if id_vec.iter().any(|&x | x == node.id){
+        // if id_vec.iter().any(|&x | x == node.id){
+        //     return Err(());
+        // }
+
+        if self.nodes_id_index.contains_key(&node.id) {
             return Err(());
         }
 
+        let len = self.nodes_collection.len();
+        self.nodes_id_index.insert(node.id, len + 1);
         self.nodes_collection.push(node);
+
         Ok(())
     }
 
@@ -138,6 +145,10 @@ impl InMemoryGraph {
     /// Drops Whole Graph
     pub fn delete_graph(self){
         todo!();
+    }
+
+    pub fn get_graph_nodes_number(&self) -> usize{
+        self.nodes_collection.len()
     }
 }
 //  Main Graph action Methods impl
@@ -323,15 +334,17 @@ mod in_memory_graph_tests {
     fn add_node_to_non_empty_graph_id_exists_failed() {
         let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
 
-        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
+        let r1 = in_mem_graph.add_node(super::Node {id: 1, label: String::from("blue")});
+        let r2 = in_mem_graph.add_node(super::Node {id: 3, label: String::from("green")});
+
 
         let adding_node = super::Node {id: 1, label: String::from("red")};
         let adding_result = in_mem_graph.add_node(adding_node);
 
         let is_node_added = in_mem_graph.nodes_collection.iter()
                                                             .any(|x| x.label == String::from("red"));
-
+        assert!(r1.is_ok());
+        assert!(r2.is_ok());
         assert_eq!(true, adding_result.is_err());
         assert_eq!(false, is_node_added);
         assert_eq!(2, in_mem_graph.nodes_collection.len());

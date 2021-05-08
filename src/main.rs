@@ -119,14 +119,14 @@ async fn create_graph(data: web::Data<core_model::GraphCollectionFacade>, body: 
 async fn get_whole_graph(data: web::Data<core_model::GraphCollectionFacade>) -> impl Responder {
     let graph_collection = data.in_memory_graph_collection.lock().unwrap();
     let first_graph = &graph_collection[0];
-    let len = first_graph.nodes_collection.len();
-    let mut node_dto_vec = Vec::with_capacity(len);
+    let len = first_graph.get_graph_nodes_number();
+    // let mut node_dto_vec = Vec::with_capacity(len);
 
-    for i in 0..len {
-        node_dto_vec.push(core_model::ReturnNodeDTO {id: first_graph.nodes_collection[i].id, 
-                                    label: String::from("aaa"), 
-                                        bonds: None });
-    }
+    // for i in 0..len {
+    //     node_dto_vec.push(core_model::ReturnNodeDTO {id: first_graph.nodes_collection[i].id, 
+    //                                 label: String::from("aaa"), 
+    //                                     bonds: None });
+    // }
 
     HttpResponse::Conflict().body("")
 }
