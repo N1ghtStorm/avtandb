@@ -90,7 +90,7 @@ fn initialize_test_kv_store() -> kv_model::InMemoryKVStore {
     kv_model::InMemoryKVStore{kv_hash_map: Arc::new(Mutex::new(hm))}
 }
 
-async fn get_test_val_by_key(data: web::Data<dyn kv_model::KVStore>) -> impl Responder {
+async fn get_test_val_by_key(data: web::Data<kv_model::InMemoryKVStore>) -> impl Responder {
     let aaa = data.get_value("foo".to_string()).unwrap();
     HttpResponse::Ok().body(format!("{}",aaa))
 }

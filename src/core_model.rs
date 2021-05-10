@@ -3,6 +3,7 @@ use std::sync::Mutex;
 use serde::{Serialize, Deserialize};
 use actix_web::web;
 use std::collections::BTreeMap;
+use uuid::Uuid;
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateGraphDTO {
@@ -18,10 +19,10 @@ pub struct ReturnNodeDTO {
 
 #[derive(Serialize, Deserialize)]
 pub struct ReturnBondDTO {
-    pub id: u32,
+    pub id: Uuid,
     pub label: String,
-    pub src: u32,
-    pub dst: u32
+    pub src: Uuid,
+    pub dst: Uuid
 }
 
 pub trait Graph {
@@ -66,6 +67,7 @@ impl InMemoryGraph {
 
     // Maps new empty Graph from DTO
     pub fn new_graph_from_dto(dto: CreateGraphDTO) -> Self {
+        let a = Uuid::new_v4();
         todo!()
     }
 
