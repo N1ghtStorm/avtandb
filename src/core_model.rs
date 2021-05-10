@@ -35,13 +35,13 @@ pub struct InMemoryGraph {
     pub name: String,
     nodes_collection: Vec<Node>,
     bonds_collection: Vec<Bond>,
-    nodes_id_index: BTreeMap<u32, usize>
+    nodes_id_index: BTreeMap<Uuid, usize>
 }    
     
 /// Main Node(Vertex) document collection element 
 #[derive(Debug)]
 pub struct Node {
-    pub id: u32,
+    pub id: Uuid,
     pub label: String
     // TODO Create properties as JSON document
 }
@@ -49,10 +49,10 @@ pub struct Node {
 /// Main Bond(Relation) document collection element
 #[derive(Debug)]
 pub struct Bond {
-    pub id: u32,
+    pub id: Uuid,
     pub label: String,
-    pub src: u32,
-    pub dst: u32
+    pub src: Uuid,
+    pub dst: Uuid
 }
 
 
@@ -79,12 +79,12 @@ impl InMemoryGraph {
         }
 
         // Create array of existing indexes
-        let mut id_vec: Vec<u32> = self.nodes_collection.iter()
+        let mut id_vec: Vec<Uuid> = self.nodes_collection.iter()
                                                                 .map(|x| x.id)
                                                                 .collect();
 
-        if node.id == 0 {
-            node.id = helpers::get_lowest_unexisting_number(&mut id_vec);
+        if node.id == Uuid::default() {
+            node.id = Uuid::new_v4();
         }
 
         if self.nodes_id_index.contains_key(&node.id) {
@@ -100,7 +100,7 @@ impl InMemoryGraph {
 
     /// Add Bond to Graph
     fn add_bond(&mut self, mut bond: Bond) -> Result<(), ()> {
-        if bond.src == 0 || bond.dst == 0 {
+        if bond.src == Uuid::default() || bond.dst == Uuid::default() {
             return Err(());
         }
 
@@ -118,11 +118,11 @@ impl InMemoryGraph {
         }
 
         // Generate bond id
-        let mut id_vec: Vec<u32> = self.bonds_collection.iter()
+        let mut id_vec: Vec<Uuid> = self.bonds_collection.iter()
                                             .map(|x| x.id)
                                             .collect();
 
-        bond.id = helpers::get_lowest_unexisting_number(&mut id_vec);
+        bond.id = Uuid::new_v4();
 
         self.bonds_collection.push(bond);
         Ok(())
@@ -164,7 +164,7 @@ impl Graph for InMemoryGraph {
 }
 
 impl Node {
-    fn new(id: u32, label: String) -> Self {
+    fn new(id: Uuid, label: String) -> Self {
         Node {id, label}
     }
 }
@@ -187,29 +187,7 @@ pub fn validate_and_map_graph(dto: CreateGraphDTO,
 
     let graph = InMemoryGraph::new_graph(dto.name);
     Ok(graph)
-}   
-
-mod helpers {
-    pub fn get_lowest_unexisting_number(vector: &mut Vec<u32>) -> u32 {
-        vector.sort();
-        let len = vector.len();
-
-        if len < 1 || vector[0] != 1 {
-            return 1;    
-        } 
-
-        let mut prev = 1;
-        for i in  1..len {
-            if (vector[i] - prev) > 1 {
-                return prev + 1;
-            }
-            prev = vector[i];
-        }
-
-        return vector[len - 1] + 1;
-    }
-}
-
+} 
 
 //======================================================================================================================
 //======================================================================================================================
@@ -220,6 +198,7 @@ mod in_memory_graph_tests {
     use std::sync::Arc;
     use std::sync::Mutex;
     use actix_web::web;
+    use uuid::Uuid;
 
     fn initialize_graph_collection() -> super::GraphCollectionFacade {
         super::GraphCollectionFacade {
@@ -274,10 +253,11 @@ mod in_memory_graph_tests {
     fn add_node_to_empty_graph_passed() {
         let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
         
-        let node = super::Node {id: 0, label: String::from("red")};
+        let node = super::Node {id: Uuid::default(), label: String::from("red")};
         let adding_result = in_mem_graph.add_node(node);
 
-        let btree_node_id = in_mem_graph.nodes_id_index.get(&1);
+        let node_uuid = in_mem_graph.nodes_collection[0].id;
+        let btree_node_id = in_mem_graph.nodes_id_index.get(&node_uuid);
 
         assert_eq!(0, *btree_node_id.unwrap());
         assert_eq!(true, adding_result.is_ok());
@@ -288,13 +268,13 @@ mod in_memory_graph_tests {
     fn add_node_to_non_empty_graph_passed() {
         let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
 
-        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap(), label: String::from("blue")});
+        in_mem_graph.nodes_collection.push(super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap(), label: String::from("green")});
 
-        let addong_node = super::Node {id: 0, label: String::from("red")};
+        let addong_node = super::Node {id: Uuid::default(), label: String::from("red")};
         let adding_result = in_mem_graph.add_node(addong_node);
 
-        let added_nodes:Vec<u32> = in_mem_graph.nodes_collection.iter()
+        let added_nodes:Vec<Uuid> = in_mem_graph.nodes_collection.iter()
                                                                .filter(|x| x.label == String::from("red"))
                                                                .map(|x| x.id)
                                                                .collect();
@@ -303,7 +283,7 @@ mod in_memory_graph_tests {
 
         assert_eq!(true, adding_result.is_ok());
         assert_eq!(3, in_mem_graph.nodes_collection.len());
-        assert_eq!(2, index);
+        assert_ne!(Uuid::default(), index);
         assert_eq!(1, added_nodes.len());
     }
 
@@ -311,26 +291,27 @@ mod in_memory_graph_tests {
     fn add_node_to_non_empty_graph_not_zero_id_passed() {
         let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
 
-        let r1 = in_mem_graph.add_node(super::Node {id: 1, label: String::from("blue")});
-        let r2 = in_mem_graph.add_node(super::Node {id: 3, label: String::from("green")});
+        let r1 = in_mem_graph.add_node(super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap(), label: String::from("blue")});
+        let r2 = in_mem_graph.add_node(super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap(), label: String::from("green")});
 
-        let adding_node = super::Node {id: 4, label: String::from("red")};
+        let checking_node_uuid = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap();
+        let adding_node = super::Node {id: checking_node_uuid, label: String::from("red")};
         let adding_result = in_mem_graph.add_node(adding_node);
 
-        let added_nodes:Vec<u32> = in_mem_graph.nodes_collection.iter()
+        let added_nodes:Vec<Uuid> = in_mem_graph.nodes_collection.iter()
                                                                .filter(|x| x.label == String::from("red"))
                                                                .map(|x| x.id)
                                                                .collect();
 
         let index = added_nodes[0];
-        let node_vector_index = in_mem_graph.nodes_id_index.get(&4);
+        let node_vector_index = in_mem_graph.nodes_id_index.get(&checking_node_uuid);
 
         assert_eq!(2, *node_vector_index.unwrap());
         assert!(r1.is_ok());
         assert!(r2.is_ok());
         assert_eq!(true, adding_result.is_ok());
         assert_eq!(3, in_mem_graph.nodes_collection.len());
-        assert_eq!(4, index);
+        assert_ne!(Uuid::default(), index);
         assert_eq!(1, added_nodes.len());
     }
 
@@ -338,12 +319,12 @@ mod in_memory_graph_tests {
     fn add_nodes_to_graph_get_correct_index_id_passed() {
         let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
 
-        let r1 = in_mem_graph.add_node(super::Node {id: 1, label: String::from("blue")});
-        let r2 = in_mem_graph.add_node(super::Node {id: 3, label: String::from("green")});
-        let r3 = in_mem_graph.add_node(super::Node {id: 300, label: String::from("green")});
-        let r4 = in_mem_graph.add_node(super::Node {id: 0, label: String::from("green")});
+        let r1 = in_mem_graph.add_node(super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap(), label: String::from("blue")});
+        let r2 = in_mem_graph.add_node(super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap(), label: String::from("green")});
+        let r3 = in_mem_graph.add_node(super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400300").unwrap(), label: String::from("green")});
+        let r4 = in_mem_graph.add_node(super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap(), label: String::from("green")});
 
-        let node_vector_index = in_mem_graph.nodes_id_index.get(&2);
+        let node_vector_index = in_mem_graph.nodes_id_index.get(&Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap());
 
         assert_eq!(3, *node_vector_index.unwrap());
         assert!(r1.is_ok());
@@ -356,11 +337,11 @@ mod in_memory_graph_tests {
     fn add_node_to_non_empty_graph_id_exists_failed() {
         let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
 
-        let r1 = in_mem_graph.add_node(super::Node {id: 1, label: String::from("blue")});
-        let r2 = in_mem_graph.add_node(super::Node {id: 3, label: String::from("green")});
+        let r1 = in_mem_graph.add_node(super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap(), label: String::from("blue")});
+        let r2 = in_mem_graph.add_node(super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap(), label: String::from("green")});
 
 
-        let adding_node = super::Node {id: 1, label: String::from("red")};
+        let adding_node = super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap(), label: String::from("red")};
         let adding_result = in_mem_graph.add_node(adding_node);
 
         let is_node_added = in_mem_graph.nodes_collection.iter()
@@ -376,10 +357,10 @@ mod in_memory_graph_tests {
     fn add_node_blank_label_failed() {
         let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
 
-        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap(), label: String::from("blue")});
+        in_mem_graph.nodes_collection.push(super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap(), label: String::from("green")});
 
-        let adding_node = super::Node {id: 1, label: String::from("")};
+        let adding_node = super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap(), label: String::from("")};
         let adding_result = in_mem_graph.add_node(adding_node);
 
         let is_node_added = in_mem_graph.nodes_collection.iter()
@@ -394,10 +375,10 @@ mod in_memory_graph_tests {
     fn add_node_space_label_failed() {
         let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
 
-        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap(), label: String::from("blue")});
+        in_mem_graph.nodes_collection.push(super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap(), label: String::from("green")});
 
-        let adding_node = super::Node {id: 2, label: String::from(" ")};
+        let adding_node = super::Node {id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap(), label: String::from(" ")};
         let adding_result = in_mem_graph.add_node(adding_node);
 
         let is_node_added = in_mem_graph.nodes_collection.iter()
@@ -411,17 +392,24 @@ mod in_memory_graph_tests {
     #[test]
     fn add_bonds_to_graph_passed() {
         let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
-        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 2, label: String::from("green")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 4, label: String::from("green")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 5, label: String::from("blue")});
 
-        in_mem_graph.bonds_collection.push(super::Bond {label: String::from("green-green"), src: 2, dst: 4, id: 0});
-        in_mem_graph.bonds_collection.push(super::Bond {label: String::from("green-green"), src: 3, dst: 2, id: 0});
-        in_mem_graph.bonds_collection.push(super::Bond {label: String::from("green-green"), src: 1, dst: 5, id: 0});
+        let uuid_1 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap();
+        let uuid_2 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap();
+        let uuid_3 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap();
+        let uuid_4 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap();
+        let uuid_5 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400005").unwrap();
 
-        let adding_bond = super::Bond {label: String::from("green-green"), src: 1, dst: 2, id: 0};
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_1, label: String::from("blue")});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_2, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_3, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_4, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_5, label: String::from("blue")});
+
+        in_mem_graph.bonds_collection.push(super::Bond {label: String::from("green-green"), src: uuid_2, dst: uuid_4, id: Uuid::new_v4()});
+        in_mem_graph.bonds_collection.push(super::Bond {label: String::from("green-green"), src: uuid_3, dst: uuid_2, id: Uuid::new_v4()});
+        in_mem_graph.bonds_collection.push(super::Bond {label: String::from("green-green"), src: uuid_1, dst: uuid_5, id: Uuid::new_v4()});
+
+        let adding_bond = super::Bond {label: String::from("green-green"), src: uuid_1, dst: uuid_2, id: Uuid::new_v4()};
         let adding_result = in_mem_graph.add_bond(adding_bond);
 
         assert_eq!(true, adding_result.is_ok());
@@ -432,13 +420,20 @@ mod in_memory_graph_tests {
     #[test]
     fn add_bonds_to_graph_non_existing_node_failed() {
         let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
-        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 2, label: String::from("green")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 4, label: String::from("green")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 5, label: String::from("blue")});
+        let uuid_1 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap();
+        let uuid_2 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap();
+        let uuid_3 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap();
+        let uuid_4 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap();
+        let uuid_5 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400005").unwrap();
+        
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_1, label: String::from("blue")});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_2, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_3, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_4, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_5, label: String::from("blue")});
 
-        let adding_bond = super::Bond {label: String::from("green-green"), src: 10, dst: 2, id: 0};
+        let adding_bond = super::Bond {label: String::from("green-green"), src: Uuid::parse_str("550e8400-e29b-41d4-a716-446655400010").unwrap(), 
+                                        dst: uuid_2, id: Uuid::new_v4()};
         let adding_result = in_mem_graph.add_bond(adding_bond);
 
         assert_eq!(true, adding_result.is_err());
@@ -448,50 +443,24 @@ mod in_memory_graph_tests {
     #[test]
     fn add_bonds_to_graph_empty_label_failed() {
         let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
-        in_mem_graph.nodes_collection.push(super::Node {id: 1, label: String::from("blue")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 2, label: String::from("green")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 3, label: String::from("green")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 4, label: String::from("green")});
-        in_mem_graph.nodes_collection.push(super::Node {id: 5, label: String::from("blue")});
+
+        let uuid_1 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap();
+        let uuid_2 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap();
+        let uuid_3 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap();
+        let uuid_4 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap();
+        let uuid_5 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400005").unwrap();
+
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_1, label: String::from("blue")});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_2, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_3, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_4, label: String::from("green")});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_5, label: String::from("blue")});
 
 
-        let adding_bond = super::Bond {label: String::from(" "), src: 1, dst: 2, id: 0};
+        let adding_bond = super::Bond {label: String::from(" "), src: uuid_1, dst: uuid_2, id: Uuid::new_v4()};
         let adding_result = in_mem_graph.add_bond(adding_bond);
 
         assert_eq!(true, adding_result.is_err());
         assert_eq!(0, in_mem_graph.bonds_collection.len());
-    }
-}
-
-#[cfg(test)]
-mod helper_tests {
-    use super::helpers;
-
-    #[test]
-    fn get_allready_sorted_vec_passed() {
-        let mut vector = vec![1, 2, 3, 4, 5, 6];
-        let last = helpers::get_lowest_unexisting_number(&mut vector);
-        assert_eq!(7, last);
-    }
-
-    #[test]
-    fn get_unsorted_vec_passed() {
-        let mut vector = vec![4, 1, 55, 2, 5, 3, 6, 8, 9];
-        let last = helpers::get_lowest_unexisting_number(&mut vector);
-        assert_eq!(7, last);
-    }
-
-    #[test]
-    fn get_without_1_passed() {
-        let mut vector = vec![4, 55, 2, 5, 3, 6, 8, 9];
-        let last = helpers::get_lowest_unexisting_number(&mut vector);
-        assert_eq!(1, last);
-    }
-
-    #[test]
-    fn get_from_empty_vec() {
-        let mut vector = Vec::<u32>::new();
-        let last = helpers::get_lowest_unexisting_number(&mut vector);
-        assert_eq!(1, last);
     }
 }
