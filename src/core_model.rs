@@ -58,6 +58,12 @@ pub struct Bond {
     pub dst: Uuid
 }
 
+pub enum BondDirection {
+    Outgoing,
+    Ingoing,
+    Both
+}
+
 
 impl InMemoryGraph {
     /// Creates new empty Graph
@@ -80,11 +86,6 @@ impl InMemoryGraph {
         if node.labels.len() == 0 || node.labels[0].trim().is_empty() {
             return Err(());
         }
-
-        // Create array of existing indexes
-        let mut id_vec: Vec<Uuid> = self.nodes_collection.iter()
-                                                                .map(|x| x.id)
-                                                                .collect();
 
         if node.id == Uuid::default() {
             node.id = Uuid::new_v4();
@@ -135,8 +136,32 @@ impl InMemoryGraph {
         todo!();
     }
 
-    fn get_connected_nodes(&self, node_id: Uuid, bond_type: &str, node_label: &str){
-        todo!();
+    fn get_connected_nodes(&self, node_id: Uuid, bond_type: &str, node_labels: Vec<&str>, direction: BondDirection) -> Result<Vec<&Node>, ()>{
+        let contains = self.nodes_id_index.contains_key(&node_id);
+
+        if !contains {
+            return Err(());
+        }
+
+        let mut nodes_refs = Vec::<&Node>::new();
+
+        let nodes_by_outgoing_ids: Vec<Uuid> = self.bonds_collection.iter().filter(|x| x.src == node_id).map(|x| x.dst).collect();
+
+        for i in 0..nodes_by_outgoing_ids.len() {
+            let curr_node_index = self.nodes_id_index.get(&nodes_by_outgoing_ids[i]).unwrap();
+            let dst_node = &self.nodes_collection[*curr_node_index];
+            nodes_refs.push(dst_node);
+        }
+
+        let nodes_by_ingoing_ids: Vec<Uuid> = self.bonds_collection.iter().filter(|x| x.dst == node_id).map(|x| x.src).collect();
+
+        for i in 0..nodes_by_outgoing_ids.len() {
+            let curr_node_index = self.nodes_id_index.get(&nodes_by_ingoing_ids[i]).unwrap();
+            let src_node = &self.nodes_collection[*curr_node_index];
+            nodes_refs.push(src_node);
+        }
+
+        Ok(nodes_refs)
     }
 
     fn get_paths_between_ids(&self, start_id: u32, finish_id: u32) -> Result<Vec<Vec<u32>>, ()>{
