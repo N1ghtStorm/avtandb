@@ -144,6 +144,9 @@ impl InMemoryGraph {
         }
 
         let mut nodes_refs = Vec::<&Node>::new();
+        let curr_node_index = self.nodes_id_index.get(&node_id);
+        let curr_node = self.nodes_collection[curr_node_index];
+        nodes_refs.push(&curr_node);
 
         let nodes_by_outgoing_ids: Vec<Uuid> = self.bonds_collection.iter().filter(|x| x.src == node_id).map(|x| x.dst).collect();
 
