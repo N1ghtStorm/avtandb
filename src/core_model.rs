@@ -136,7 +136,8 @@ impl InMemoryGraph {
         todo!();
     }
 
-    fn get_connected_nodes(&self, node_id: Uuid, bond_type: &str, node_labels: Vec<&str>, direction: BondDirection) -> Result<Vec<&Node>, ()>{
+    // TODO THINK ABOUT REF LIFETIMES TO MAKE REQUEST WITHOUT NON-REQUIRED ALLOCATIONS: 
+    pub fn get_connected_nodes(&self, node_id: Uuid, bond_type: &str, node_labels: Vec<&str>, direction: BondDirection) -> Result<Vec<&Node>, ()>{
         let contains = self.nodes_id_index.contains_key(&node_id);
 
         if !contains {
@@ -145,8 +146,9 @@ impl InMemoryGraph {
 
         let mut nodes_refs = Vec::<&Node>::new();
         
-        // SHIT SHIT SHIT
         let node_index = self.nodes_id_index.get(&node_id).unwrap();
+
+        // SEARCH DUPLICATE LOL
         let curr_node = &self.nodes_collection[*node_index];
         nodes_refs.push(curr_node);
 
@@ -508,5 +510,31 @@ mod in_memory_graph_tests {
 
         assert_eq!(true, adding_result.is_err());
         assert_eq!(0, in_mem_graph.bonds_collection.len());
+    }
+
+
+    #[test]
+    fn get_simple_connected_nodes_passed() {
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
+
+        let uuid_1 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap();
+        let uuid_2 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap();
+        let uuid_3 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap();
+        let uuid_4 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap();
+        let uuid_5 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400005").unwrap();
+
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_1, labels: vec![String::from("blue")]});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_2, labels: vec![String::from("green")]});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_3, labels: vec![String::from("green")]});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_4, labels: vec![String::from("green")]});
+        in_mem_graph.nodes_collection.push(super::Node {id: uuid_5, labels: vec![String::from("blue")]});
+
+        in_mem_graph.bonds_collection.push(super::Bond {label: String::from("green-green"), src: uuid_2, dst: uuid_4, id: Uuid::new_v4()});
+        in_mem_graph.bonds_collection.push(super::Bond {label: String::from("green-green"), src: uuid_3, dst: uuid_2, id: Uuid::new_v4()});
+        in_mem_graph.bonds_collection.push(super::Bond {label: String::from("green-green"), src: uuid_1, dst: uuid_5, id: Uuid::new_v4()});
+
+        let connected_nodes = in_mem_graph.get_connected_nodes(uuid_2, "", Vec::new(), super::BondDirection::Both).unwrap();
+
+        assert_eq!(3, connected_nodes.len());
     }
 }
