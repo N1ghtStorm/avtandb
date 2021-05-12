@@ -137,20 +137,22 @@ impl InMemoryGraph {
         todo!();
     }
 
-    // TODO THINK ABOUT REF LIFETIMES TO MAKE REQUEST WITHOUT NON-REQUIRED ALLOCATIONS: 
+    // TODO THINK ABOUT REFACTORING
     pub fn get_connected_nodes(&self, node_id: Uuid, bond_types: Vec<String>, node_labels: Vec<String>, direction: BondDirection) -> Result<Vec<&Node>, ()>{
         let mut nodes_refs = Vec::<&Node>::new();
         let node_index_opt = self.nodes_id_index.get(&node_id);
 
         if node_index_opt.is_none() {
             return Err(());
-        } 
+        }
+
         let node_labels_len = node_labels.len();
         let bond_types_len = bond_types.len();
 
         let curr_node = &self.nodes_collection[*node_index_opt.unwrap()];
         nodes_refs.push(curr_node);
 
+        // If ingoing - skip
         if direction != BondDirection::Ingoing {
             let nodes_by_outgoing_ids: Vec<Uuid> = self.bonds_collection.iter().filter(|x| x.src == node_id && {
                                                                                     if bond_types_len == 0 { true } else {             
@@ -180,6 +182,7 @@ impl InMemoryGraph {
             }
         }
 
+        // If outgoing - skip
         if direction != BondDirection::Outgoing {
             let nodes_by_ingoing_ids: Vec<Uuid> = self.bonds_collection.iter().filter(|x| x.dst == node_id && {
                                                                                     if bond_types_len == 0 { true } else {             
@@ -580,5 +583,71 @@ mod in_memory_graph_tests {
         assert!(conn_nodes_ids_with_2.contains(&Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap()));
         assert!(conn_nodes_ids_with_2.contains(&Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap()));
         assert!(conn_nodes_ids_with_2.contains(&Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap()));
+    }
+
+    #[test]
+    fn get_connected_nodes_with_labels_passed() {
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
+
+        let uuid_1 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap();
+        let uuid_2 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap();
+        let uuid_3 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap();
+        let uuid_4 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap();
+        let uuid_5 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400005").unwrap();
+
+        in_mem_graph.add_node(super::Node {id: uuid_1, labels: vec![String::from("blue")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_2, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_3, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_4, labels: vec![String::from("grey")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_5, labels: vec![String::from("blue")]}).unwrap();
+
+        in_mem_graph.add_bond(super::Bond {label: String::from("green-green"), src: uuid_2, dst: uuid_4, id: Uuid::new_v4()}).unwrap();
+        in_mem_graph.add_bond(super::Bond {label: String::from("green-green"), src: uuid_3, dst: uuid_2, id: Uuid::new_v4()}).unwrap();
+        in_mem_graph.add_bond(super::Bond {label: String::from("green-green"), src: uuid_1, dst: uuid_5, id: Uuid::new_v4()}).unwrap();
+
+        let connected_nodes_with_2 = in_mem_graph.get_connected_nodes(uuid_2, 
+                                    Vec::new(), 
+                                    vec!["green".to_string()], 
+                                    super::BondDirection::Both).unwrap();
+
+        let conn_nodes_ids_with_2: Vec<Uuid> = connected_nodes_with_2.iter().map(|x| x.id).collect();
+
+        assert_eq!(2, connected_nodes_with_2.len());
+        assert!(conn_nodes_ids_with_2.contains(&Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap()));
+        assert!(conn_nodes_ids_with_2.contains(&Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap()));
+        assert!(!conn_nodes_ids_with_2.contains(&Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap()));
+    }
+
+    #[test]
+    fn get_connected_nodes_with_bond_label_passed() {
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
+
+        let uuid_1 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap();
+        let uuid_2 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap();
+        let uuid_3 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap();
+        let uuid_4 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap();
+        let uuid_5 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400005").unwrap();
+
+        in_mem_graph.add_node(super::Node {id: uuid_1, labels: vec![String::from("blue")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_2, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_3, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_4, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_5, labels: vec![String::from("blue")]}).unwrap();
+
+        in_mem_graph.add_bond(super::Bond {label: String::from("green-grey"), src: uuid_2, dst: uuid_4, id: Uuid::new_v4()}).unwrap();
+        in_mem_graph.add_bond(super::Bond {label: String::from("green-green"), src: uuid_3, dst: uuid_2, id: Uuid::new_v4()}).unwrap();
+        in_mem_graph.add_bond(super::Bond {label: String::from("green-green"), src: uuid_1, dst: uuid_5, id: Uuid::new_v4()}).unwrap();
+
+        let connected_nodes_with_2 = in_mem_graph.get_connected_nodes(uuid_2, 
+                            vec!["green-green".to_string()],
+                                    Vec::new(), 
+                                    super::BondDirection::Both).unwrap();
+
+        let conn_nodes_ids_with_2: Vec<Uuid> = connected_nodes_with_2.iter().map(|x| x.id).collect();
+
+        assert_eq!(2, connected_nodes_with_2.len());
+        assert!(conn_nodes_ids_with_2.contains(&Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap()));
+        assert!(conn_nodes_ids_with_2.contains(&Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap()));
+        assert!(!conn_nodes_ids_with_2.contains(&Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap()));
     }
 }
