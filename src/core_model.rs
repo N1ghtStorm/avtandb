@@ -58,6 +58,7 @@ pub struct Bond {
     pub dst: Uuid
 }
 
+#[derive(PartialEq)]
 pub enum BondDirection {
     Outgoing,
     Ingoing,
@@ -137,30 +138,74 @@ impl InMemoryGraph {
     }
 
     // TODO THINK ABOUT REF LIFETIMES TO MAKE REQUEST WITHOUT NON-REQUIRED ALLOCATIONS: 
-    pub fn get_connected_nodes(&self, node_id: Uuid, bond_types: Vec<&str>, node_labels: Vec<&str>, direction: BondDirection) -> Result<Vec<&Node>, ()>{
+    pub fn get_connected_nodes(&self, node_id: Uuid, bond_types: Vec<String>, node_labels: Vec<String>, direction: BondDirection) -> Result<Vec<&Node>, ()>{
         let mut nodes_refs = Vec::<&Node>::new();
         let node_index_opt = self.nodes_id_index.get(&node_id);
 
         if node_index_opt.is_none() {
             return Err(());
         } 
+        let node_labels_len = node_labels.len();
+        let bond_types_len = bond_types.len();
 
         let curr_node = &self.nodes_collection[*node_index_opt.unwrap()];
         nodes_refs.push(curr_node);
-        let nodes_by_outgoing_ids: Vec<Uuid> = self.bonds_collection.iter().filter(|x| x.src == node_id).map(|x| x.dst).collect();
 
-        for i in 0..nodes_by_outgoing_ids.len() {
-            let curr_node_index = self.nodes_id_index.get(&nodes_by_outgoing_ids[i]).unwrap();
-            let dst_node = &self.nodes_collection[*curr_node_index];
-            nodes_refs.push(dst_node);
+        if direction != BondDirection::Ingoing {
+            let nodes_by_outgoing_ids: Vec<Uuid> = self.bonds_collection.iter().filter(|x| x.src == node_id && {
+                                                                                    if bond_types_len == 0 { true } else {             
+                                                                                        bond_types.contains(&x.label)
+                                                                                    }
+                                                                                })
+                                                                                .map(|x| x.dst)
+                                                                                .collect();
+            for i in 0..nodes_by_outgoing_ids.len() {
+                let curr_node_index = self.nodes_id_index.get(&nodes_by_outgoing_ids[i]).unwrap();
+                let dst_node = &self.nodes_collection[*curr_node_index];
+
+                // if len is 0 - we include all labels
+                if node_labels_len == 0 { 
+                    nodes_refs.push(dst_node);
+                    break;
+                }
+
+                // Add only if labels intersect
+                for label in &dst_node.labels {
+                    if node_labels.contains(label) {
+                        nodes_refs.push(dst_node);
+                        break;
+                    }
+                }
+                
+            }
         }
 
-        let nodes_by_ingoing_ids: Vec<Uuid> = self.bonds_collection.iter().filter(|x| x.dst == node_id).map(|x| x.src).collect();
+        if direction != BondDirection::Outgoing {
+            let nodes_by_ingoing_ids: Vec<Uuid> = self.bonds_collection.iter().filter(|x| x.dst == node_id && {
+                                                                                    if bond_types_len == 0 { true } else {             
+                                                                                        bond_types.contains(&x.label)
+                                                                                    }
+                                                                                })
+                                                                              .map(|x| x.src)
+                                                                              .collect();
+            for i in 0..nodes_by_ingoing_ids.len() {
+                let curr_node_index = self.nodes_id_index.get(&nodes_by_ingoing_ids[i]).unwrap();
+                let src_node = &self.nodes_collection[*curr_node_index];
 
-        for i in 0..nodes_by_outgoing_ids.len() {
-            let curr_node_index = self.nodes_id_index.get(&nodes_by_ingoing_ids[i]).unwrap();
-            let src_node = &self.nodes_collection[*curr_node_index];
-            nodes_refs.push(src_node);
+                // if len is 0 - we include all labels
+                if node_labels_len == 0 { 
+                    nodes_refs.push(src_node);
+                    break;
+                }
+                
+                // Add only if labels intersect
+                for label in &src_node.labels {
+                    if node_labels.contains(label) {
+                        nodes_refs.push(src_node);
+                        break;
+                    }
+                }
+            }
         }
 
         Ok(nodes_refs)
