@@ -137,7 +137,6 @@ impl InMemoryGraph {
         todo!();
     }
 
-    // TODO THINK ABOUT REFACTORING
     pub fn get_connected_nodes(&self, node_id: Uuid, bond_types: Vec<String>, node_labels: Vec<String>, direction: BondDirection) -> Result<Vec<&Node>, ()>{
         let mut nodes_refs = Vec::<&Node>::new();
         let node_index_opt = self.nodes_id_index.get(&node_id);
@@ -148,13 +147,25 @@ impl InMemoryGraph {
 
         let node_labels_len = node_labels.len();
         let bond_types_len = bond_types.len();
-
         let curr_node = &self.nodes_collection[*node_index_opt.unwrap()];
         nodes_refs.push(curr_node);
-
+        
         // If ingoing - skip
         if direction != BondDirection::Ingoing {
-            let nodes_by_outgoing_ids: Vec<Uuid> = self.bonds_collection.iter().filter(|x| x.src == node_id && {
+            add_outgoing_nodes(&self, node_id, &bond_types, &node_labels,  &mut nodes_refs, node_labels_len, bond_types_len);
+        }
+
+        // If outgoing - skip
+        if direction != BondDirection::Outgoing {
+            add_ingoing_nodes(&self, node_id, &bond_types, &node_labels,  &mut nodes_refs, node_labels_len, bond_types_len);
+        }
+
+        return Ok(nodes_refs);
+
+        // INNER FUNCTIONS:
+        fn add_outgoing_nodes<'a>(self_graph: &'a InMemoryGraph, node_id: Uuid, bond_types: &Vec<String>, node_labels: &Vec<String>, 
+                                                            nodes_refs: &mut Vec<&'a Node>, node_labels_len: usize, bond_types_len: usize) {
+            let nodes_by_outgoing_ids: Vec<Uuid> = self_graph.bonds_collection.iter().filter(|x| x.src == node_id && {
                                                                                     if bond_types_len == 0 { true } else {             
                                                                                         bond_types.contains(&x.label)
                                                                                     }
@@ -162,8 +173,8 @@ impl InMemoryGraph {
                                                                                 .map(|x| x.dst)
                                                                                 .collect();
             for i in 0..nodes_by_outgoing_ids.len() {
-                let curr_node_index = self.nodes_id_index.get(&nodes_by_outgoing_ids[i]).unwrap();
-                let dst_node = &self.nodes_collection[*curr_node_index];
+                let curr_node_index = self_graph.nodes_id_index.get(&nodes_by_outgoing_ids[i]).unwrap();
+                let dst_node = &self_graph.nodes_collection[*curr_node_index];
 
                 // if len is 0 - we include all labels
                 if node_labels_len == 0 { 
@@ -181,10 +192,9 @@ impl InMemoryGraph {
                 
             }
         }
-
-        // If outgoing - skip
-        if direction != BondDirection::Outgoing {
-            let nodes_by_ingoing_ids: Vec<Uuid> = self.bonds_collection.iter().filter(|x| x.dst == node_id && {
+        fn add_ingoing_nodes<'a>(self_graph: &'a InMemoryGraph, node_id: Uuid, bond_types: &Vec<String>, node_labels: &Vec<String>, 
+        nodes_refs: &mut Vec<&'a Node>, node_labels_len: usize, bond_types_len: usize) {
+                        let nodes_by_ingoing_ids: Vec<Uuid> = self_graph.bonds_collection.iter().filter(|x| x.dst == node_id && {
                                                                                     if bond_types_len == 0 { true } else {             
                                                                                         bond_types.contains(&x.label)
                                                                                     }
@@ -192,8 +202,8 @@ impl InMemoryGraph {
                                                                               .map(|x| x.src)
                                                                               .collect();
             for i in 0..nodes_by_ingoing_ids.len() {
-                let curr_node_index = self.nodes_id_index.get(&nodes_by_ingoing_ids[i]).unwrap();
-                let src_node = &self.nodes_collection[*curr_node_index];
+                let curr_node_index = self_graph.nodes_id_index.get(&nodes_by_ingoing_ids[i]).unwrap();
+                let src_node = &self_graph.nodes_collection[*curr_node_index];
 
                 // if len is 0 - we include all labels
                 if node_labels_len == 0 { 
@@ -210,8 +220,6 @@ impl InMemoryGraph {
                 }
             }
         }
-
-        Ok(nodes_refs)
     }
 
     fn get_paths_between_ids(&self, start_id: u32, finish_id: u32) -> Result<Vec<Vec<u32>>, ()>{
