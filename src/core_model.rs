@@ -165,7 +165,8 @@ impl InMemoryGraph {
         // INNER FUNCTIONS:
         fn add_outgoing_nodes<'a>(self_graph: &'a InMemoryGraph, node_id: Uuid, bond_types: &Vec<String>, node_labels: &Vec<String>, 
                                                             nodes_refs: &mut Vec<&'a Node>, node_labels_len: usize, bond_types_len: usize) {
-            let nodes_by_outgoing_ids: Vec<Uuid> = self_graph.bonds_collection.iter().filter(|x| x.src == node_id && {
+            let nodes_by_outgoing_ids: Vec<Uuid> = self_graph.bonds_collection.iter()
+                                                                                .filter(|x| x.src == node_id && {
                                                                                     if bond_types_len == 0 { true } else {             
                                                                                         bond_types.contains(&x.label)
                                                                                     }
@@ -194,13 +195,14 @@ impl InMemoryGraph {
         }
         fn add_ingoing_nodes<'a>(self_graph: &'a InMemoryGraph, node_id: Uuid, bond_types: &Vec<String>, node_labels: &Vec<String>, 
         nodes_refs: &mut Vec<&'a Node>, node_labels_len: usize, bond_types_len: usize) {
-                        let nodes_by_ingoing_ids: Vec<Uuid> = self_graph.bonds_collection.iter().filter(|x| x.dst == node_id && {
-                                                                                    if bond_types_len == 0 { true } else {             
-                                                                                        bond_types.contains(&x.label)
-                                                                                    }
-                                                                                })
-                                                                              .map(|x| x.src)
-                                                                              .collect();
+                        let nodes_by_ingoing_ids: Vec<Uuid> = self_graph.bonds_collection.iter()
+                                                                                            .filter(|x| x.dst == node_id && {
+                                                                                                    if bond_types_len == 0 { true } else {             
+                                                                                                        bond_types.contains(&x.label)
+                                                                                                    }
+                                                                                                })
+                                                                                            .map(|x| x.src)
+                                                                                            .collect();
             for i in 0..nodes_by_ingoing_ids.len() {
                 let curr_node_index = self_graph.nodes_id_index.get(&nodes_by_ingoing_ids[i]).unwrap();
                 let src_node = &self_graph.nodes_collection[*curr_node_index];

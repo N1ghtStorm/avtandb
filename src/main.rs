@@ -6,6 +6,7 @@ use std::collections::HashMap;
 
 mod core_model;
 mod kv_model;
+mod RusterCypher;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
