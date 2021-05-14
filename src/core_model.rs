@@ -658,4 +658,93 @@ mod in_memory_graph_tests {
         assert!(conn_nodes_ids_with_2.contains(&Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap()));
         assert!(!conn_nodes_ids_with_2.contains(&Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap()));
     }
+
+    #[test]
+    fn get_connected_nodes_with_no_bonds_passed() {
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
+
+        let uuid_1 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap();
+        let uuid_2 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap();
+        let uuid_3 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap();
+        let uuid_4 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap();
+        let uuid_5 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400005").unwrap();
+
+        in_mem_graph.add_node(super::Node {id: uuid_1, labels: vec![String::from("blue")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_2, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_3, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_4, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_5, labels: vec![String::from("blue")]}).unwrap();
+
+        let connected_nodes_with_2 = in_mem_graph.get_connected_nodes(uuid_2, 
+                            vec!["green-green".to_string()],
+                                    Vec::new(), 
+                                    super::BondDirection::Both).unwrap();
+
+        let conn_nodes_ids_with_2: Vec<Uuid> = connected_nodes_with_2.iter().map(|x| x.id).collect();
+
+        assert_eq!(1, connected_nodes_with_2.len());
+        assert!(conn_nodes_ids_with_2.contains(&Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap()));
+    }
+
+    #[test]
+    fn get_connected_nodes_with_no_bonds_failed() {
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
+
+        let uuid_1 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap();
+        let uuid_2 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap();
+        let uuid_3 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap();
+        let uuid_4 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap();
+        let uuid_5 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400005").unwrap();
+
+        in_mem_graph.add_node(super::Node {id: uuid_1, labels: vec![String::from("blue")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_2, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_3, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_4, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_5, labels: vec![String::from("blue")]}).unwrap();
+
+        let connected_nodes_with_2 = in_mem_graph.get_connected_nodes(Uuid::parse_str("550e8400-e29b-41d4-a716-446655400006").unwrap(), 
+                            vec!["green-green".to_string()],
+                                    Vec::new(), 
+                                    super::BondDirection::Both);
+
+        assert!(connected_nodes_with_2.is_err());
+    }
+
+    #[test]
+    fn get_connected_nodes_with_bond_label_multi_passed() {
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
+
+        let uuid_1 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap();
+        let uuid_2 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap();
+        let uuid_3 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap();
+        let uuid_4 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap();
+        let uuid_5 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400005").unwrap();
+
+        in_mem_graph.add_node(super::Node {id: uuid_1, labels: vec![String::from("blue")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_2, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_3, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_4, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_5, labels: vec![String::from("blue")]}).unwrap();
+
+        in_mem_graph.add_bond(super::Bond {label: String::from("green-grey"), src: uuid_2, dst: uuid_4, id: Uuid::new_v4()}).unwrap();
+        in_mem_graph.add_bond(super::Bond {label: String::from("green-green"), src: uuid_3, dst: uuid_2, id: Uuid::new_v4()}).unwrap();
+
+        // Add testing bonds to 1
+        in_mem_graph.add_bond(super::Bond {label: String::from("green-green"), src: uuid_1, dst: uuid_5, id: Uuid::new_v4()}).unwrap();
+        in_mem_graph.add_bond(super::Bond {label: String::from("green-green"), src: uuid_1, dst: uuid_1, id: Uuid::new_v4()}).unwrap();
+        in_mem_graph.add_bond(super::Bond {label: String::from("ruster"), src: uuid_1, dst: uuid_3, id: Uuid::new_v4()}).unwrap();
+        in_mem_graph.add_bond(super::Bond {label: String::from("ruster"), src: uuid_1, dst: uuid_4, id: Uuid::new_v4()}).unwrap();
+        in_mem_graph.add_bond(super::Bond {label: String::from("ruster"), src: uuid_1, dst: uuid_4, id: Uuid::new_v4()}).unwrap();
+        in_mem_graph.add_bond(super::Bond {label: String::from("ruster"), src: uuid_1, dst: uuid_2, id: Uuid::new_v4()}).unwrap();
+        
+        let connected_nodes_with_1 = in_mem_graph.get_connected_nodes(uuid_1, 
+                            vec!["green-green".to_string(), "ruster".to_string()],
+                                    Vec::new(), 
+                                    super::BondDirection::Both).unwrap();
+
+        let conn_nodes_ids_with_1: Vec<Uuid> = connected_nodes_with_1.iter().map(|x| x.id).collect();
+
+        assert_eq!(5, connected_nodes_with_1.len());
+        assert_eq!(6, conn_nodes_ids_with_1.len());
+    }
 }
