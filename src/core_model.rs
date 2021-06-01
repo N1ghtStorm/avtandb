@@ -137,6 +137,7 @@ impl InMemoryGraph {
         todo!();
     }
 
+    /// SHITTY CODE - REFACTOR!!!!!!!!!!!!!
     pub fn get_connected_nodes(&self, node_id: Uuid, bond_types: Vec<String>, node_labels: Vec<String>, direction: BondDirection) -> Result<Vec<&Node>, ()>{
         let mut nodes_refs = Vec::<&Node>::new();
         let node_index_opt = self.nodes_id_index.get(&node_id);
@@ -165,6 +166,8 @@ impl InMemoryGraph {
         // INNER FUNCTIONS:
         fn add_outgoing_nodes<'a>(self_graph: &'a InMemoryGraph, node_id: Uuid, bond_types: &Vec<String>, node_labels: &Vec<String>, 
                                                             nodes_refs: &mut Vec<&'a Node>, node_labels_len: usize, bond_types_len: usize) {
+
+            // get id by outgoing                                              
             let nodes_by_outgoing_ids: Vec<Uuid> = self_graph.bonds_collection.iter()
                                                                                 .filter(|x| x.src == node_id && {
                                                                                     if bond_types_len == 0 { true } else {             
@@ -173,6 +176,8 @@ impl InMemoryGraph {
                                                                                 })
                                                                                 .map(|x| x.dst)
                                                                                 .collect();
+
+
             for i in 0..nodes_by_outgoing_ids.len() {
                 let curr_node_index = self_graph.nodes_id_index.get(&nodes_by_outgoing_ids[i]).unwrap();
                 let dst_node = &self_graph.nodes_collection[*curr_node_index];
@@ -180,19 +185,19 @@ impl InMemoryGraph {
                 // if len is 0 - we include all labels
                 if node_labels_len == 0 { 
                     nodes_refs.push(dst_node);
-                    break;
+                    continue;
                 }
 
                 // Add only if labels intersect
                 for label in &dst_node.labels {
                     if node_labels.contains(label) {
                         nodes_refs.push(dst_node);
-                        break;
+                        continue;
                     }
-                }
-                
+                }  
             }
         }
+        
         fn add_ingoing_nodes<'a>(self_graph: &'a InMemoryGraph, node_id: Uuid, bond_types: &Vec<String>, node_labels: &Vec<String>, 
                                                         nodes_refs: &mut Vec<&'a Node>, node_labels_len: usize, bond_types_len: usize) {
             let nodes_by_ingoing_ids: Vec<Uuid> = self_graph.bonds_collection.iter()
@@ -210,14 +215,14 @@ impl InMemoryGraph {
                 // if len is 0 - we include all labels
                 if node_labels_len == 0 { 
                     nodes_refs.push(src_node);
-                    break;
+                    continue;
                 }
                 
                 // Add only if labels intersect
                 for label in &src_node.labels {
                     if node_labels.contains(label) {
                         nodes_refs.push(src_node);
-                        break;
+                        continue;
                     }
                 }
             }
@@ -722,11 +727,11 @@ mod in_memory_graph_tests {
         let uuid_4 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap();
         let uuid_5 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400005").unwrap();
 
-        in_mem_graph.add_node(super::Node {id: uuid_1, labels: vec![String::from("blue")]}).unwrap();
-        in_mem_graph.add_node(super::Node {id: uuid_2, labels: vec![String::from("green")]}).unwrap();
-        in_mem_graph.add_node(super::Node {id: uuid_3, labels: vec![String::from("green")]}).unwrap();
-        in_mem_graph.add_node(super::Node {id: uuid_4, labels: vec![String::from("green")]}).unwrap();
-        in_mem_graph.add_node(super::Node {id: uuid_5, labels: vec![String::from("blue")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_1, labels: vec![String::from("blue1")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_2, labels: vec![String::from("blue2")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_3, labels: vec![String::from("blue3")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_4, labels: vec![String::from("blue4")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_5, labels: vec![String::from("blue5")]}).unwrap();
 
         in_mem_graph.add_bond(super::Bond {label: String::from("green-grey"), src: uuid_2, dst: uuid_4, id: Uuid::new_v4()}).unwrap();
         in_mem_graph.add_bond(super::Bond {label: String::from("green-green"), src: uuid_3, dst: uuid_2, id: Uuid::new_v4()}).unwrap();
@@ -747,9 +752,8 @@ mod in_memory_graph_tests {
         let conn_nodes_ids_with_1: Vec<Uuid> = connected_nodes_with_1.iter().map(|x| x.id).collect();
 
         assert_eq!(5, connected_nodes_with_1.len());
-        assert_eq!(6, conn_nodes_ids_with_1.len());
+        assert_eq!(8, conn_nodes_ids_with_1.len());
     }
-
 
     #[test]
     fn get_connected_nodes_with_bond_label_multi_out_passed() {
@@ -781,7 +785,7 @@ mod in_memory_graph_tests {
 
         let conn_nodes_ids_with_1: Vec<Uuid> = connected_nodes_with_1.iter().map(|x| x.id).collect();
 
-        assert_eq!(4, connected_nodes_with_1.len());
+        assert_eq!(5, connected_nodes_with_1.len());
         assert_eq!(4, in_mem_graph.bonds_collection.len());
 
     }
@@ -802,7 +806,6 @@ mod in_memory_graph_tests {
         in_mem_graph.add_node(super::Node {id: uuid_4, labels: vec![String::from("green")]}).unwrap();
         in_mem_graph.add_node(super::Node {id: uuid_5, labels: vec![String::from("blue")]}).unwrap();
 
-
         // Add testing bonds to 1
         in_mem_graph.add_bond(super::Bond {label: String::from("green-green"), src: uuid_2, dst: uuid_1, id: Uuid::new_v4()}).unwrap();
         in_mem_graph.add_bond(super::Bond {label: String::from("ruster"), src: uuid_3, dst: uuid_1, id: Uuid::new_v4()}).unwrap();
@@ -815,9 +818,8 @@ mod in_memory_graph_tests {
                                     super::BondDirection::Both).unwrap();
 
         let conn_nodes_ids_with_1: Vec<Uuid> = connected_nodes_with_1.iter().map(|x| x.id).collect();
-
-        assert_eq!(4, connected_nodes_with_1.len());
+        
+        assert_eq!(5, connected_nodes_with_1.len());
         assert_eq!(4, in_mem_graph.bonds_collection.len());
-
     }
 }
