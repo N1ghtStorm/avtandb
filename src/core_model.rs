@@ -4,6 +4,7 @@ use serde::{Serialize, Deserialize};
 use actix_web::web;
 use std::collections::BTreeMap;
 use uuid::Uuid;
+use std::collections::HashSet;
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateGraphDTO {
@@ -83,7 +84,6 @@ impl InMemoryGraph {
         let a = Uuid::new_v4();
         todo!()
     }
-
 
     /// Add Node to Graph
     pub fn add_node(&mut self, mut node: Node) -> Result<(), ()> {
@@ -236,27 +236,50 @@ impl InMemoryGraph {
     }
 
     /// GETS NODES THAT EXIST IN UUID LIST
-    pub fn get_nodes_by_id_list(&self, uuid_list: Vec<Uuid>)-> Result<Vec<&Node>, ()>{
-        let mut existing_nodes = Vec::new();
+    pub fn get_nodes_by_id_list(&self, uuid_list: Vec<Uuid>) -> Result<Vec<&Node>, ()>{
+        let mut existing_node_refs = Vec::new();
+        let mut existing_uuids_set = HashSet::<Uuid>::new();
         
         // CHECK IF EXISTS => THEN ADD TO RETURN VECTOR
         for i in 0..uuid_list.len()  {
             match self.nodes_id_index.get(&uuid_list[i]){
                 Some(n) => {
-                    let node_ref = &self.nodes_collection[*n];
-                    existing_nodes.push(node_ref);
+                    if !existing_uuids_set.contains(&self.nodes_collection[*n].id){
+                        let node_ref = &self.nodes_collection[*n];
+                        existing_node_refs.push(node_ref);
+                        existing_uuids_set.insert(self.nodes_collection[*n].id);
+                    }
                 },
                 None => ()
             }
         }
 
-        return Ok(existing_nodes);
+        Ok(existing_node_refs)
+    }
+
+    /// GETS NODES THAT EXIST IN LABEL LIST
+    pub fn get_nodes_by_label_list(&self, label_list: Vec<String>) -> Result<Vec<&Node>, ()>{
+        let mut existing_node_refs = Vec::new();
+        let mut existing_uuids_set = HashSet::<Uuid>::new();
+        
+        // CHECK IF EXISTS => THEN ADD TO RETURN VECTOR
+        // CURRENTLY THERE IS NO INDEX ON LABELS
+        // NOW IT IS MIGHT ME TOO SLOW
+        for i in 0..label_list.len()  {
+            for j in 0..self.nodes_collection.len(){
+                if self.nodes_collection[j].labels.contains(&label_list[i]) && !existing_uuids_set.contains(&self.nodes_collection[j].id){
+                    existing_uuids_set.insert(self.nodes_collection[j].id);
+                    existing_node_refs.push(&self.nodes_collection[j]);
+                }
+            }
+        }
+
+        Ok(existing_node_refs)
     }
 
     fn get_paths_between_ids(&self, start_id: u32, finish_id: u32) -> Result<Vec<Vec<u32>>, ()>{
+        todo!();
         let paths = Vec::new();
-
-
         Ok(paths)
     }
 
@@ -873,6 +896,31 @@ mod in_memory_graph_tests {
     }
 
     #[test]
+    fn get_nodes_by_id_list_with_dups_passed() {
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
+
+        let uuid_1 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap();
+        let uuid_2 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap();
+        let uuid_3 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap();
+        let uuid_4 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap();
+        let uuid_5 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400005").unwrap();
+        let uuid_6 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400006").unwrap();
+        let uuid_7 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400007").unwrap();
+
+
+        in_mem_graph.add_node(super::Node {id: uuid_1, labels: vec![String::from("blue")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_2, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_3, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_4, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_5, labels: vec![String::from("blue")]}).unwrap();
+
+        let id_list = vec![uuid_1, uuid_1, uuid_2, uuid_2, uuid_3, uuid_6, uuid_7];
+        let nodes_by_id_list = in_mem_graph.get_nodes_by_id_list(id_list);
+
+        assert_eq!(3, nodes_by_id_list.unwrap().len());
+    }
+
+    #[test]
     fn get_nodes_by_id_list_all_node_exist_passed() {
         let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
 
@@ -895,5 +943,28 @@ mod in_memory_graph_tests {
         let nodes_by_id_list = in_mem_graph.get_nodes_by_id_list(id_list);
 
         assert_eq!(0, nodes_by_id_list.unwrap().len());
+    }
+
+    #[test]
+    fn get_nodes_by_label_list_passed() {
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
+
+        let uuid_1 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap();
+        let uuid_2 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap();
+        let uuid_3 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap();
+        let uuid_4 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap();
+        let uuid_5 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400005").unwrap();
+
+
+        in_mem_graph.add_node(super::Node {id: uuid_1, labels: vec![String::from("one"), String::from("blue")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_2, labels: vec![String::from("two"), String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_3, labels: vec![String::from("three"), String::from("yellow")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_4, labels: vec![String::from("four"), String::from("brown")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_5, labels: vec![String::from("five"), String::from("white")]}).unwrap();
+
+        let label_list = vec![String::from("one"), String::from("yellow"), String::from("five"), String::from("white")];
+        let nodes_by_id_list = in_mem_graph.get_nodes_by_label_list(label_list);
+
+        assert_eq!(3, nodes_by_id_list.unwrap().len());
     }
 }
