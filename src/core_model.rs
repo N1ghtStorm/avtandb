@@ -141,6 +141,7 @@ impl InMemoryGraph {
     }
 
     /// SHITTY CODE - REFACTOR!!!!!!!!!!!!!
+    /// GETS CONNECTED NODES WITH CURRENT
     pub fn get_connected_nodes(&self, node_id: Uuid, bond_types: Vec<String>, node_labels: Vec<String>, direction: BondDirection) -> Result<Vec<&Node>, ()>{
         let mut nodes_refs = Vec::<&Node>::new();
         let node_index_opt = self.nodes_id_index.get(&node_id);
@@ -232,6 +233,24 @@ impl InMemoryGraph {
                 }
             }
         }
+    }
+
+    /// GETS NODES THAT EXIST IN UUID LIST
+    pub fn get_nodes_by_id_list(&self, uuid_list: Vec<Uuid>)-> Result<Vec<&Node>, ()>{
+        let mut existing_nodes = Vec::new();
+        
+        // CHECK IF EXISTS => THEN ADD TO RETURN VECTOR
+        for i in 0..uuid_list.len()  {
+            match self.nodes_id_index.get(&uuid_list[i]){
+                Some(n) => {
+                    let node_ref = &self.nodes_collection[*n];
+                    existing_nodes.push(node_ref);
+                },
+                None => ()
+            }
+        }
+
+        return Ok(existing_nodes);
     }
 
     fn get_paths_between_ids(&self, start_id: u32, finish_id: u32) -> Result<Vec<Vec<u32>>, ()>{
@@ -826,5 +845,55 @@ mod in_memory_graph_tests {
         
         assert_eq!(5, connected_nodes_with_1.len());
         assert_eq!(4, in_mem_graph.bonds_collection.len());
+    }
+
+    #[test]
+    fn get_nodes_by_id_list_passed() {
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
+
+        let uuid_1 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap();
+        let uuid_2 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap();
+        let uuid_3 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap();
+        let uuid_4 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap();
+        let uuid_5 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400005").unwrap();
+        let uuid_6 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400006").unwrap();
+        let uuid_7 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400007").unwrap();
+
+
+        in_mem_graph.add_node(super::Node {id: uuid_1, labels: vec![String::from("blue")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_2, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_3, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_4, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_5, labels: vec![String::from("blue")]}).unwrap();
+
+        let id_list = vec![uuid_1, uuid_2, uuid_3, uuid_6, uuid_7];
+        let nodes_by_id_list = in_mem_graph.get_nodes_by_id_list(id_list);
+
+        assert_eq!(3, nodes_by_id_list.unwrap().len());
+    }
+
+    #[test]
+    fn get_nodes_by_id_list_all_node_exist_passed() {
+        let mut in_mem_graph = super::InMemoryGraph::new_graph("MyGraph".to_string());
+
+        let uuid_1 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400001").unwrap();
+        let uuid_2 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400002").unwrap();
+        let uuid_3 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400003").unwrap();
+        let uuid_4 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400004").unwrap();
+        let uuid_5 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400005").unwrap();
+        let uuid_6 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400006").unwrap();
+        let uuid_7 = Uuid::parse_str("550e8400-e29b-41d4-a716-446655400007").unwrap();
+
+
+        in_mem_graph.add_node(super::Node {id: uuid_1, labels: vec![String::from("blue")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_2, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_3, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_4, labels: vec![String::from("green")]}).unwrap();
+        in_mem_graph.add_node(super::Node {id: uuid_5, labels: vec![String::from("blue")]}).unwrap();
+
+        let id_list = vec![uuid_6, uuid_7];
+        let nodes_by_id_list = in_mem_graph.get_nodes_by_id_list(id_list);
+
+        assert_eq!(0, nodes_by_id_list.unwrap().len());
     }
 }
