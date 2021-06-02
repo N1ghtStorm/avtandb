@@ -35,7 +35,8 @@ pub struct InMemoryGraph {
     pub name: String,
     nodes_collection: Vec<Node>,
     bonds_collection: Vec<Bond>,
-    nodes_id_index: BTreeMap<Uuid, usize>
+    nodes_id_index: BTreeMap<Uuid, usize>,
+    bonds_id_index: BTreeMap<Uuid, usize>
 }
 pub struct GraphCollectionFacade {
     pub in_memory_graph_collection: Arc<Mutex<Vec<InMemoryGraph>>>
@@ -72,7 +73,9 @@ impl InMemoryGraph {
         InMemoryGraph {name, 
                     nodes_collection: Vec::new(), 
                     bonds_collection: Vec::new(),
-                    nodes_id_index: BTreeMap::new()}
+                    nodes_id_index: BTreeMap::new(),
+                    bonds_id_index: BTreeMap::new()
+                }
     }
 
     // Maps new empty Graph from DTO
@@ -164,6 +167,7 @@ impl InMemoryGraph {
         return Ok(nodes_refs);
 
         // INNER FUNCTIONS:
+        /// Get nodes nodes by outgoing bonds
         fn add_outgoing_nodes<'a>(self_graph: &'a InMemoryGraph, node_id: Uuid, bond_types: &Vec<String>, node_labels: &Vec<String>, 
                                                             nodes_refs: &mut Vec<&'a Node>, node_labels_len: usize, bond_types_len: usize) {
 
@@ -198,6 +202,7 @@ impl InMemoryGraph {
             }
         }
         
+        /// Get nodes nodes by ingoing bonds
         fn add_ingoing_nodes<'a>(self_graph: &'a InMemoryGraph, node_id: Uuid, bond_types: &Vec<String>, node_labels: &Vec<String>, 
                                                         nodes_refs: &mut Vec<&'a Node>, node_labels_len: usize, bond_types_len: usize) {
             let nodes_by_ingoing_ids: Vec<Uuid> = self_graph.bonds_collection.iter()
