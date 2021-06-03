@@ -798,7 +798,7 @@ mod in_memory_graph_tests {
 
         let conn_nodes_ids_with_1: Vec<Uuid> = connected_nodes_with_1.iter().map(|x| x.id).collect();
 
-        assert_eq!(5, connected_nodes_with_1.len());
+        assert_eq!(8, connected_nodes_with_1.len());
         assert_eq!(8, conn_nodes_ids_with_1.len());
     }
 

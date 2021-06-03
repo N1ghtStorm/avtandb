@@ -22,7 +22,6 @@ async fn main() -> std::io::Result<()> {
         App::new()
             //.app_data(kv_data.clone())
             .app_data(app_state.clone())
-
             .route("/get_test_val", web::get().to(get_test_val_by_key))
 
 
@@ -104,8 +103,8 @@ fn initialize_test_kv_store() -> kv_model::InMemoryKVStore {
     kv_model::InMemoryKVStore{kv_hash_map: Arc::new(Mutex::new(hm))}
 }
 
-async fn get_test_val_by_key(data: web::Data<kv_model::InMemoryKVStore>) -> impl Responder {
-    let aaa = data.get_value("foo".to_string()).unwrap();
+async fn get_test_val_by_key(data: web::Data<AppState>) -> impl Responder {
+    let aaa = data.kv_collection.get_value("foo".to_string()).unwrap();
     HttpResponse::Ok().body(format!("{}",aaa))
 }
 
