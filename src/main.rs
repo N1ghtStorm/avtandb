@@ -16,9 +16,13 @@ async fn main() -> std::io::Result<()> {
     let graph_data = web::Data::new(initialize_graph_collection());
     let kv_data = web::Data::new(initialize_test_kv_store());
 
+    let mut app_state = web::Data::new( initialize_app_state());
+
     HttpServer::new( move || {
         App::new()
-            .app_data(kv_data.clone())
+            //.app_data(kv_data.clone())
+            .app_data(app_state.clone())
+
             .route("/get_test_val", web::get().to(get_test_val_by_key))
 
 
@@ -68,6 +72,15 @@ async fn hi() -> impl Responder {
 async fn execute_command() -> impl Responder {
     HttpResponse::Ok().body("")
 }
+
+pub struct AppState {
+    graph_collection: core_model::GraphCollectionFacade,
+    kv_collection: kv_model::InMemoryKVStore
+}
+
+fn initialize_app_state() -> AppState {
+    AppState {graph_collection: initialize_graph_collection(), kv_collection: initialize_test_kv_store()}
+ }
 
 /// initialize common graph collection for all programm lifetime
 fn initialize_graph_collection() -> core_model::GraphCollectionFacade {
