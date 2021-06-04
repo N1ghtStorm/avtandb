@@ -13,21 +13,15 @@ async fn main() -> std::io::Result<()> {
     let url = "0.0.0.0:18085";
     print_console_avtan(&url);
 
-    // let graph_data = web::Data::new(initialize_graph_collection());
-    // let kv_data = web::Data::new(initialize_test_kv_store());
+    // CREATE GLOBAL STATE INITIALIZING GRAPH COLLECTION AND KV COLLECTION
+    let app_state = web::Data::new( AppState::new());
 
-    let mut app_state = web::Data::new( initialize_app_state());
-
+    // START HHT SERVER WITH GLOBAL STATE
     HttpServer::new( move || {
         App::new()
-            //.app_data(kv_data.clone())
             .app_data(app_state.clone())
+            // TEST ENDPOINTS
             .route("/get_test_val", web::get().to(get_test_val_by_key))
-
-
-            // .app_data(graph_data.clone())
-            // .route("/create_graph", web::get().to(create_graph))
-            // .app_data(data.clone())
             .route("/get_graph", web::post().to(create_graph))
             .service(hi)
     })
@@ -60,52 +54,46 @@ async fn hi() -> impl Responder {
     ")
 }
 
-// /// Get
-// #[post("/get_whole_graph")]
-// async fn get_whole_graph() -> impl Responder {
-//     HttpResponse::Ok().body("")
-// }
-
-/// Main Endpoint for command
-#[post("/command")]
-async fn execute_command() -> impl Responder {
-    HttpResponse::Ok().body("")
-}
-
+// WRAPPER STRUCT TO PROVIDE GLOBAL STATE
 pub struct AppState {
     graph_collection: core_model::GraphCollectionFacade,
     kv_collection: kv_model::InMemoryKVStore
 }
 
-fn initialize_app_state() -> AppState {
-    AppState {graph_collection: initialize_graph_collection(), kv_collection: initialize_test_kv_store()}
- }
-
-/// initialize common graph collection for all programm lifetime
-fn initialize_graph_collection() -> core_model::GraphCollectionFacade {
-    core_model::GraphCollectionFacade {
-        in_memory_graph_collection: Arc::new(Mutex::new(Vec::new()))
+impl AppState {
+    fn new() -> AppState {
+        AppState {graph_collection: AppState::initialize_graph_collection(), kv_collection: AppState::initialize_test_kv_store()}
+     }
+    
+    /// initialize common graph collection for all programm lifetime
+    fn initialize_graph_collection() -> core_model::GraphCollectionFacade {
+        core_model::GraphCollectionFacade {
+            in_memory_graph_collection: Arc::new(Mutex::new(Vec::new()))
+        }
+    }
+    
+    // initialize kv store for all programm lifetime
+    fn initialize_test_kv_store() -> kv_model::InMemoryKVStore {
+        //kv_model::KVStore::new()
+        let key_1 = "foo".to_string();
+        let val_1 = 
+        "{
+            \"a\": 1,
+            \"b\": \"asd\",
+            \"arr\": [{},{},{\"lol\": 20}]
+        } ".to_string();
+        let mut hm = HashMap::new();
+        hm.insert(key_1, Arc::new(val_1));
+        kv_model::InMemoryKVStore{kv_hash_map: Arc::new(Mutex::new(hm))}
     }
 }
 
-// initialize kv store for all programm lifetime
-fn initialize_test_kv_store() -> kv_model::InMemoryKVStore {
-    //kv_model::KVStore::new()
-    let key_1 = "foo".to_string();
-    let val_1 = 
-    "{
-        \"a\": 1,
-        \"b\": \"asd\",
-        \"arr\": [{},{},{\"lol\": 20}]
-    } ".to_string();
-    let mut hm = HashMap::new();
-    hm.insert(key_1, Arc::new(val_1));
-    kv_model::InMemoryKVStore{kv_hash_map: Arc::new(Mutex::new(hm))}
-}
+
+
 
 async fn get_test_val_by_key(data: web::Data<AppState>) -> impl Responder {
-    let aaa = data.kv_collection.get_value("foo".to_string()).unwrap();
-    HttpResponse::Ok().body(format!("{}",aaa))
+    let arc_string_value = data.kv_collection.get_value("foo".to_string()).unwrap();
+    HttpResponse::Ok().body(format!("{}",arc_string_value))
 }
 
 async fn create_graph(data: web::Data<AppState>, body: String) -> impl Responder {
