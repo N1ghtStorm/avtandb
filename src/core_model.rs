@@ -316,7 +316,7 @@ impl Node {
 
 
 pub fn validate_and_map_graph(dto: CreateGraphDTO, 
-    graph_data: web::Data<GraphCollectionFacade>) -> Result<InMemoryGraph, ()> {
+    graph_data: &GraphCollectionFacade) -> Result<InMemoryGraph, ()> {
     let graphs = graph_data.in_memory_graph_collection.lock().unwrap();
 
     // check if exactly name existst

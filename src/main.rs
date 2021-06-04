@@ -13,8 +13,8 @@ async fn main() -> std::io::Result<()> {
     let url = "0.0.0.0:18085";
     print_console_avtan(&url);
 
-    let graph_data = web::Data::new(initialize_graph_collection());
-    let kv_data = web::Data::new(initialize_test_kv_store());
+    // let graph_data = web::Data::new(initialize_graph_collection());
+    // let kv_data = web::Data::new(initialize_test_kv_store());
 
     let mut app_state = web::Data::new( initialize_app_state());
 
@@ -28,7 +28,7 @@ async fn main() -> std::io::Result<()> {
             // .app_data(graph_data.clone())
             // .route("/create_graph", web::get().to(create_graph))
             // .app_data(data.clone())
-            // .route("/get_graph", web::get().to(create_graph))
+            .route("/get_graph", web::get().to(create_graph))
             .service(hi)
     })
     .bind(url)?
@@ -108,19 +108,22 @@ async fn get_test_val_by_key(data: web::Data<AppState>) -> impl Responder {
     HttpResponse::Ok().body(format!("{}",aaa))
 }
 
-async fn create_graph(data: web::Data<core_model::GraphCollectionFacade>, body: String) -> impl Responder {
+async fn create_graph(data: web::Data<AppState>, body: String) -> impl Responder {
     let deser_result: Result<core_model::CreateGraphDTO> = serde_json::from_str(&body.to_string());
-    let dto = deser_result.unwrap();
+    let dto = match deser_result{
+        Ok(s) => s,
+        Err(_) => panic!()
+    };
           
-    return match core_model::validate_and_map_graph(dto, data.clone()) {
+    return match core_model::validate_and_map_graph(dto, &data.graph_collection) {
         Err(_) => {
-            let graph_collection = data.in_memory_graph_collection.lock().unwrap();
+            let graph_collection = data.graph_collection.in_memory_graph_collection.lock().unwrap();
             let len = graph_collection.len();
             let answer  = format!("failed creating graph number is: {} body is \"{}\"", len, body);
             HttpResponse::Conflict().body(answer)
         },
         Ok(img) => {
-            let mut graph_collection = data.in_memory_graph_collection.lock().unwrap();
+            let mut graph_collection = data.graph_collection.in_memory_graph_collection.lock().unwrap();
             graph_collection.push(img);
             let len = graph_collection.len();
             let answer  = format!("number is: {} body is \"{:?}\"", len, graph_collection);
