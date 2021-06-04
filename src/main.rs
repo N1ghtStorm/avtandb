@@ -28,7 +28,7 @@ async fn main() -> std::io::Result<()> {
             // .app_data(graph_data.clone())
             // .route("/create_graph", web::get().to(create_graph))
             // .app_data(data.clone())
-            .route("/get_graph", web::get().to(create_graph))
+            .route("/get_graph", web::post().to(create_graph))
             .service(hi)
     })
     .bind(url)?
