@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use std::sync::Mutex;
 use std::collections::HashMap;
 
@@ -16,8 +16,8 @@ async fn main() -> std::io::Result<()> {
     // CREATE GLOBAL STATE INITIALIZING GRAPH COLLECTION AND KV COLLECTION
     let app_state = web::Data::new( AppState::new());
 
-    // START HHT SERVER WITH GLOBAL STATE
-    HttpServer::new( move || {
+    // START HTTP SERVER WITH GLOBAL STATE
+    HttpServer::new( move || {  
         App::new()
             .app_data(app_state.clone())
             // TEST ENDPOINTS
@@ -28,30 +28,6 @@ async fn main() -> std::io::Result<()> {
     .bind(url)?
     .run()
     .await
-}
-
-/// Healthcheck endpoint
-#[get("/avtan")]
-async fn hi() -> impl Responder {
-    HttpResponse::Ok().body("
-                        ~-.
-                        ,,,;            ~-.~-.~-
-                    (.../           ~-.~-.~-.~-.~-.
-                < } O~`, ,        ~-.~-.~-.~-.~-.~-.
-                    (/    T ,     ~-.~-.~-.~-.~-.~-.~-.
-                        ;    T     ~-.~-.~-.~-.~-.~-.~-.
-                      ;   {_.~-.~-.~-.~-.~-.~-.~
-                    ;:  .-~`    ~-.~-.~-.~-.~-.
-                    ;.: :'    ._   ~-.~-.~-.~-.~-
-                    ;::`-.    '-._  ~-.~-.~-.~-
-                    ;::. `-.    '-,~-.~-.~-.
-                        ';::::.`''-.-'
-                        ';::;;:,:'
-                            '||T
-                            / |
-                          __   _
-           AVTAN DB IS RUNNING!!! KOKOKOKO!!!!! ;)
-    ")
 }
 
 // WRAPPER STRUCT TO PROVIDE GLOBAL STATE
@@ -109,4 +85,28 @@ fn print_console_avtan(url: &&str)  {
     ");
     println!("                           🦀🐔🐔🐔🐔🐔🐔🐔🐔🦀
                     Avtan server starting on {}", url);
+}
+
+/// Healthcheck endpoint
+#[get("/avtan")]
+async fn hi() -> impl Responder {
+    HttpResponse::Ok().body("
+                        ~-.
+                        ,,,;            ~-.~-.~-
+                    (.../           ~-.~-.~-.~-.~-.
+                < } O~`, ,        ~-.~-.~-.~-.~-.~-.
+                    (/    T ,     ~-.~-.~-.~-.~-.~-.~-.
+                        ;    T     ~-.~-.~-.~-.~-.~-.~-.
+                      ;   {_.~-.~-.~-.~-.~-.~-.~
+                    ;:  .-~`    ~-.~-.~-.~-.~-.
+                    ;.: :'    ._   ~-.~-.~-.~-.~-
+                    ;::`-.    '-._  ~-.~-.~-.~-
+                    ;::. `-.    '-,~-.~-.~-.
+                        ';::::.`''-.-'
+                        ';::;;:,:'
+                            '||T
+                            / |
+                          __   _
+           AVTAN DB IS RUNNING!!! KOKOKOKO!!!!! ;)
+    ")
 }
