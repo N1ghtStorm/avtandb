@@ -349,9 +349,9 @@ mod in_memory_graph_tests {
 
     #[test]
     fn validate_and_map_graph_passed() {
-        let data = web::Data::new(initialize_graph_collection());
+        let graph_collection_fac = initialize_graph_collection();
         let dto = super::CreateGraphDTO {name: String::from("my_new_graph_name")};
-        let result = super::validate_and_map_graph(dto, data.clone());
+        let result = super::validate_and_map_graph(dto, &graph_collection_fac);
 
         assert_eq!(true, result.is_ok());
         assert_eq!("my_new_graph_name", result.unwrap().name);
@@ -359,34 +359,35 @@ mod in_memory_graph_tests {
 
     #[test]
     fn validate_and_map_graph_with_filled_passed() {
-        let data = web::Data::new(initialize_graph_collection());
+        let graph_collection_fac = initialize_graph_collection();
         let dto = super::CreateGraphDTO {name: String::from("my_new_graph_name")};
-
+ 
         {
-            let graph_collection_lock = data.in_memory_graph_collection.lock();
+            let graph_collection_lock = graph_collection_fac.in_memory_graph_collection.lock();
             let mut graph_collection = graph_collection_lock.unwrap();
             graph_collection.push(super::InMemoryGraph::new_graph(String::from("some")));
             graph_collection.push(super::InMemoryGraph::new_graph(String::from("some2")));
         }
 
-        let result = super::validate_and_map_graph(dto, data.clone());
+        let result = super::validate_and_map_graph(dto, &graph_collection_fac);
         assert_eq!(true, result.is_ok());
         assert_eq!("my_new_graph_name", result.unwrap().name);
     }
 
     #[test]
     fn validate_and_map_graph_success_failed() {
-        let data = web::Data::new(initialize_graph_collection());
+        //let data = web::Data::new(initialize_graph_collection());
+        let graph_collection_fac = initialize_graph_collection();
         let dto = super::CreateGraphDTO {name: String::from("my_new_graph_name")};
 
         {
-            let graph_collection_lock = data.in_memory_graph_collection.lock();
+            let graph_collection_lock = graph_collection_fac.in_memory_graph_collection.lock();
             let mut graph_collection = graph_collection_lock.unwrap();
             graph_collection.push(super::InMemoryGraph::new_graph(String::from("some")));
             graph_collection.push(super::InMemoryGraph::new_graph(String::from("my_new_graph_name")));
         }
 
-        let result = super::validate_and_map_graph(dto, data.clone());
+        let result = super::validate_and_map_graph(dto, &graph_collection_fac);
         assert_eq!(true, result.is_err());
     }
 

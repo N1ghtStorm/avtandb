@@ -88,9 +88,6 @@ impl AppState {
     }
 }
 
-
-
-
 async fn get_test_val_by_key(data: web::Data<AppState>) -> impl Responder {
     let arc_string_value = data.kv_collection.get_value("foo".to_string()).unwrap();
     HttpResponse::Ok().body(format!("{}",arc_string_value))
