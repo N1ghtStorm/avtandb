@@ -242,11 +242,11 @@ impl InMemoryGraph {
         // CHECK IF EXISTS => THEN ADD TO RETURN VECTOR
         for i in 0..uuid_list.len()  {
             match self.nodes_id_index.get(&uuid_list[i]){
-                Some(n) => {
-                    if !existing_uuids_set.contains(&self.nodes_collection[*n].id){
-                        let node_ref = &self.nodes_collection[*n];
+                Some(index_ref) => {
+                    if !existing_uuids_set.contains(&self.nodes_collection[*index_ref].id){
+                        let node_ref = &self.nodes_collection[*index_ref];
                         existing_node_refs.push(node_ref);
-                        existing_uuids_set.insert(self.nodes_collection[*n].id);
+                        existing_uuids_set.insert(self.nodes_collection[*index_ref].id);
                     }
                 },
                 None => ()
@@ -263,7 +263,7 @@ impl InMemoryGraph {
         
         // CHECK IF EXISTS => THEN ADD TO RETURN VECTOR
         // CURRENTLY THERE IS NO INDEX ON LABELS
-        // NOW IT IS MIGHT ME TOO SLOW
+        // NOW IT IS MIGHT BE TOO SLOW
         for i in 0..label_list.len()  {
             for j in 0..self.nodes_collection.len(){
                 if self.nodes_collection[j].labels.contains(&label_list[i]) && !existing_uuids_set.contains(&self.nodes_collection[j].id){
