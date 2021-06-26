@@ -39,7 +39,8 @@ impl InMemoryKVStore {
         };
     }
 
-    fn remove_key(&mut self, key: String) -> Result<(),()> {
+    /// Removes Key-Value Pair from KV collection
+    pub fn remove_key(&mut self, key: String) -> Result<(),()> {
         // NOT SURE IF self....lock() - is a good idea
         let mut hash_map = self.kv_hash_map.lock().unwrap();
         match hash_map.remove(&key) {
@@ -48,13 +49,38 @@ impl InMemoryKVStore {
         }
     }
 
-    fn update_value(&mut self, key: String, value: String) -> Result<(),()> {
+    /// Updates the value by key
+    pub fn update_value(&mut self, key: String, value: String) -> Result<(),()> {
         // NOT SURE IF self....lock() - is a good idea
         let mut hash_map = self.kv_hash_map.lock().unwrap();
         match hash_map.get(&key){
             None => Err(()),
             Some(_) => {
                 hash_map.insert(key, Arc::new(value));
+                Ok(())
+            }
+        }
+    }
+
+    /// Get all Keys Collection
+    pub fn get_all_keys(&self) -> Result<Vec<String>, ()> {
+        // NOT SURE IF self....lock() - is a good idea
+        let mut hash_map = self.kv_hash_map.lock().unwrap();
+
+        // TODO: think about .clone() ?????
+        let vals: Vec<String> = hash_map.iter().map(|(x, _)| x.clone()).collect();
+        Ok(vals)
+    }
+
+    /// Renames Key
+    pub fn rename_key(&mut self, key: String, new_key: String) -> Result<(), ()> {
+        // NOT SURE IF self....lock() - is a good idea
+        let mut hash_map = self.kv_hash_map.lock().unwrap();
+        match hash_map.remove(&key) {
+            None => Err(()),
+            Some(stored_val) => {
+                hash_map.remove(&key);
+                hash_map.insert(new_key, stored_val);
                 Ok(())
             }
         }
