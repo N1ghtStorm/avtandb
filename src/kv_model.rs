@@ -40,11 +40,24 @@ impl InMemoryKVStore {
     }
 
     fn remove_key(&mut self, key: String) -> Result<(),()> {
-        todo!();
+        // NOT SURE IF self....lock() - is a good idea
+        let mut hash_map = self.kv_hash_map.lock().unwrap();
+        match hash_map.remove(&key) {
+            Some(_) => Ok(()),
+            None => Err(())
+        }
     }
 
     fn update_value(&mut self, key: String, value: String) -> Result<(),()> {
-        todo!();
+        // NOT SURE IF self....lock() - is a good idea
+        let mut hash_map = self.kv_hash_map.lock().unwrap();
+        match hash_map.get(&key){
+            None => Err(()),
+            Some(_) => {
+                hash_map.insert(key, Arc::new(value));
+                Ok(())
+            }
+        }
     }
 }
 
