@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+use std::sync::RwLock;
 use std::sync::Mutex;
 use std::collections::HashMap;
 
@@ -60,7 +61,7 @@ impl AppState {
         } ".to_string();
         let mut hm = HashMap::new();
         hm.insert(key_1, Arc::new(val_1));
-        kv_model::InMemoryKVStore{kv_hash_map: Arc::new(Mutex::new(hm))}
+        kv_model::InMemoryKVStore{kv_hash_map: Arc::new(RwLock::new(hm))}
     }
 }
 

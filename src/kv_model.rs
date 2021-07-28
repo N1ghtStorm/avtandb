@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use std::sync::Mutex;
+use std::sync::RwLock;
 use std::collections::HashMap;
 
 pub trait KVStore {
@@ -11,18 +11,18 @@ pub trait KVStore {
 
 /// Facade over main hash map
 pub struct InMemoryKVStore {
-    pub kv_hash_map: Arc<Mutex<HashMap<String, Arc<String>>>>
+    pub kv_hash_map: Arc<RwLock<HashMap<String, Arc<String>>>>
 }
 
 impl InMemoryKVStore {
     /// ctor
     pub fn new() -> Self {
-        InMemoryKVStore { kv_hash_map: Arc::new(Mutex::new(HashMap::new())) }
+        InMemoryKVStore { kv_hash_map: Arc::new(RwLock::new(HashMap::new())) }
     }
 
     pub fn add_value(&mut self, key: String, value: String) -> Result<(), ()> {
         // NOT SURE IF self....lock() - is a good idea
-        let mut hash_map = self.kv_hash_map.lock().unwrap();
+        let mut hash_map = self.kv_hash_map.write().unwrap();
         hash_map.insert(key, Arc::new(value));
         Ok(())
     }
@@ -30,7 +30,7 @@ impl InMemoryKVStore {
     /// Get value
     pub fn get_value(&self, key: String) -> Result<Arc<String>, ()> {
         // NOT SURE IF self....lock() - is a good idea
-        let hash_map = self.kv_hash_map.lock().unwrap();
+        let hash_map = self.kv_hash_map.read().unwrap();
         let val = hash_map.get(&key);
 
         return match val {
@@ -42,7 +42,7 @@ impl InMemoryKVStore {
     /// Removes Key-Value Pair from KV collection
     pub fn remove_key(&mut self, key: String) -> Result<(),()> {
         // NOT SURE IF self....lock() - is a good idea
-        let mut hash_map = self.kv_hash_map.lock().unwrap();
+        let mut hash_map = self.kv_hash_map.write().unwrap();
         match hash_map.remove(&key) {
             Some(_) => Ok(()),
             None => Err(())
@@ -52,7 +52,7 @@ impl InMemoryKVStore {
     /// Updates the value by key
     pub fn update_value(&mut self, key: String, value: String) -> Result<(),()> {
         // NOT SURE IF self....lock() - is a good idea
-        let mut hash_map = self.kv_hash_map.lock().unwrap();
+        let mut hash_map = self.kv_hash_map.write().unwrap();
         match hash_map.get(&key){
             None => Err(()),
             Some(_) => {
@@ -65,7 +65,7 @@ impl InMemoryKVStore {
     /// Get all Keys Collection
     pub fn get_all_keys(&self) -> Result<Vec<String>, ()> {
         // NOT SURE IF self....lock() - is a good idea
-        let mut hash_map = self.kv_hash_map.lock().unwrap();
+        let mut hash_map = self.kv_hash_map.read().unwrap();
 
         // TODO: think about .clone() ?????
         let vals: Vec<String> = hash_map.iter().map(|(x, _)| x.clone()).collect();
@@ -75,7 +75,7 @@ impl InMemoryKVStore {
     /// Renames Key
     pub fn rename_key(&mut self, key: String, new_key: String) -> Result<(), ()> {
         // NOT SURE IF self....lock() - is a good idea
-        let mut hash_map = self.kv_hash_map.lock().unwrap();
+        let mut hash_map = self.kv_hash_map.write().unwrap();
         match hash_map.remove(&key) {
             None => Err(()),
             Some(stored_val) => {
