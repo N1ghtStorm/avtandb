@@ -1,5 +1,4 @@
-use std::sync::Arc;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex, RwLock};
 use serde::{Serialize, Deserialize};
 use std::collections::BTreeMap;
 use uuid::Uuid;
@@ -39,7 +38,7 @@ pub struct InMemoryGraph {
     pub bonds_id_index: BTreeMap<Uuid, usize>
 }
 pub struct GraphCollectionFacade {
-    pub in_memory_graph_collection: Arc<Mutex<Vec<InMemoryGraph>>>
+    pub in_memory_graph_collection: Arc<RwLock<Vec<InMemoryGraph>>>
 }
     
 /// Main Node(Vertex) document collection element 
@@ -322,7 +321,7 @@ impl Node {
 
 pub fn validate_and_map_graph(dto: CreateGraphDTO, 
     graph_data: &GraphCollectionFacade) -> Result<InMemoryGraph, ()> {
-    let graphs = graph_data.in_memory_graph_collection.lock().unwrap();
+    let graphs = graph_data.in_memory_graph_collection.read().unwrap();
 
     // check if exactly name existst
     for i in 0..graphs.len() {

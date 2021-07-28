@@ -1,7 +1,6 @@
 use std::sync::Arc;
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use std::sync::RwLock;
-use std::sync::Mutex;
 use std::collections::HashMap;
 
 mod core_model;
@@ -45,7 +44,7 @@ impl AppState {
     /// initialize common graph collection for all programm lifetime
     fn initialize_graph_collection() -> core_model::GraphCollectionFacade {
         core_model::GraphCollectionFacade {
-            in_memory_graph_collection: Arc::new(Mutex::new(Vec::new()))
+            in_memory_graph_collection: Arc::new(RwLock::new(Vec::new()))
         }
     }
     

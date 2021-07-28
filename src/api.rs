@@ -17,13 +17,13 @@ pub async fn create_graph(data: web::Data<AppState>, body: String) -> impl Respo
           
     return match core_model::validate_and_map_graph(dto, &data.graph_collection) {
         Err(_) => {
-            let graph_collection = data.graph_collection.in_memory_graph_collection.lock().unwrap();
+            let graph_collection = data.graph_collection.in_memory_graph_collection.read().unwrap();
             let len = graph_collection.len();
             let answer  = format!("failed creating graph number is: {} body is \"{}\"", len, body);
             HttpResponse::Conflict().body(answer)
         },
         Ok(img) => {
-            let mut graph_collection = data.graph_collection.in_memory_graph_collection.lock().unwrap();
+            let mut graph_collection = data.graph_collection.in_memory_graph_collection.write().unwrap();
             graph_collection.push(img);
             let len = graph_collection.len();
             let answer  = format!("number is: {} body is \"{:?}\"", len, graph_collection);
@@ -34,7 +34,7 @@ pub async fn create_graph(data: web::Data<AppState>, body: String) -> impl Respo
 
 
 async fn get_whole_graph(data: web::Data<core_model::GraphCollectionFacade>) -> impl Responder {
-    let graph_collection = data.in_memory_graph_collection.lock().unwrap();
+    let graph_collection = data.in_memory_graph_collection.read().unwrap();
     let first_graph = &graph_collection[0];
     let len = first_graph.get_graph_nodes_number();
     // let mut node_dto_vec = Vec::with_capacity(len);

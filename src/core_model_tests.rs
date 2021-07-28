@@ -1,13 +1,13 @@
 #[cfg(test)]
 mod in_memory_graph_tests {
     use std::sync::Arc;
-    use std::sync::Mutex;
+    use std::sync::RwLock;
     use uuid::Uuid;
     use crate::core_model;
 
     fn initialize_graph_collection() -> core_model::GraphCollectionFacade {
         core_model::GraphCollectionFacade {
-            in_memory_graph_collection: Arc::new(Mutex::new(Vec::new()))
+            in_memory_graph_collection: Arc::new(RwLock::new(Vec::new()))
         }
     }
 
@@ -27,7 +27,7 @@ mod in_memory_graph_tests {
         let dto = core_model::CreateGraphDTO {name: String::from("my_new_graph_name")};
  
         {
-            let graph_collection_lock = graph_collection_fac.in_memory_graph_collection.lock();
+            let graph_collection_lock = graph_collection_fac.in_memory_graph_collection.write();
             let mut graph_collection = graph_collection_lock.unwrap();
             graph_collection.push(core_model::InMemoryGraph::new_graph(String::from("some")));
             graph_collection.push(core_model::InMemoryGraph::new_graph(String::from("some2")));
@@ -45,7 +45,7 @@ mod in_memory_graph_tests {
         let dto = core_model::CreateGraphDTO {name: String::from("my_new_graph_name")};
 
         {
-            let graph_collection_lock = graph_collection_fac.in_memory_graph_collection.lock();
+            let graph_collection_lock = graph_collection_fac.in_memory_graph_collection.write();
             let mut graph_collection = graph_collection_lock.unwrap();
             graph_collection.push(core_model::InMemoryGraph::new_graph(String::from("some")));
             graph_collection.push(core_model::InMemoryGraph::new_graph(String::from("my_new_graph_name")));

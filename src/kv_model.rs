@@ -14,6 +14,10 @@ pub struct InMemoryKVStore {
     pub kv_hash_map: Arc<RwLock<HashMap<String, Arc<String>>>>
 }
 
+pub struct ShardedKvStore {
+    pub sharded_hasm_map: InMemoryKVStore
+}
+
 impl InMemoryKVStore {
     /// ctor
     pub fn new() -> Self {
