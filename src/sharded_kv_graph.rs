@@ -1,12 +1,12 @@
 use crate::kv_model;
 
-pub struct LocalShardedKvStore {
+pub struct KvStoreShard {
     pub sharded_hasm_map: kv_model::InMemoryKVStore
 }
 
-impl LocalShardedKvStore {
+impl KvStoreShard {
     pub fn new() -> Self {
-        LocalShardedKvStore { sharded_hasm_map: kv_model::InMemoryKVStore::new()}
+        KvStoreShard { sharded_hasm_map: kv_model::InMemoryKVStore::new()}
     }
 
     // Use it just after the shard manager had chosen this shard

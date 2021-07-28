@@ -1,6 +1,6 @@
 use crate::core_model;
 use crate::{AppState};
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{web, HttpResponse, Responder};
 use serde_json::Result;
 
 pub async fn get_test_val_by_key(data: web::Data<AppState>) -> impl Responder {
@@ -33,17 +33,12 @@ pub async fn create_graph(data: web::Data<AppState>, body: String) -> impl Respo
 }
 
 
-async fn get_whole_graph(data: web::Data<core_model::GraphCollectionFacade>) -> impl Responder {
+async fn get_graph_by_name(data: web::Data<core_model::GraphCollectionFacade>, graph_name: String) -> impl Responder {
     let graph_collection = data.in_memory_graph_collection.read().unwrap();
-    let first_graph = &graph_collection[0];
-    let len = first_graph.get_graph_nodes_number();
-    // let mut node_dto_vec = Vec::with_capacity(len);
-
-    // for i in 0..len {
-    //     node_dto_vec.push(core_model::ReturnNodeDTO {id: first_graph.nodes_collection[i].id, 
-    //                                 label: String::from("aaa"), 
-    //                                     bonds: None });
-    // }
-
-    HttpResponse::Conflict().body("")
+    let graph = match graph_collection.iter().find(|x| x.name == graph_name) {
+        None => return HttpResponse::NotFound().body(""),
+        Some(g) => g
+    };
+    let responce = serde_json::to_string(&graph).unwrap();
+    HttpResponse::Ok().body(responce)
 }

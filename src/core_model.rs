@@ -29,7 +29,7 @@ pub trait Graph {
     fn create_bond(&mut self, bond: Bond) -> Result<(), ()>;
 } 
 /// Main Graph Model
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct InMemoryGraph {
     pub name: String,
     pub nodes_collection: Vec<Node>,
@@ -42,7 +42,7 @@ pub struct GraphCollectionFacade {
 }
     
 /// Main Node(Vertex) document collection element 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Node {
     pub id: Uuid,
     pub labels: Vec<String>
@@ -50,7 +50,7 @@ pub struct Node {
 }
 
 /// Main Bond(Relation) document collection element
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Bond {
     pub id: Uuid,
     pub label: String,
