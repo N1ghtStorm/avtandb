@@ -1,6 +1,8 @@
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::collections::HashMap;
+use chrono::{DateTime, TimeZone, NaiveDateTime, Utc};
+//use chrono::{DateTime};
 
 pub trait KVStore {
     fn add_value(&mut self, key: String, value: String) -> Result<(), ()>;
@@ -14,8 +16,8 @@ pub struct InMemoryKVStore {
     pub kv_hash_map: Arc<RwLock<HashMap<String, Arc<String>>>>
 }
 
-pub struct ShardedKvStore {
-    pub sharded_hasm_map: InMemoryKVStore
+pub struct TtlMap {
+    pub kv_hash_map: Arc<RwLock<HashMap<String, DateTime<Utc>>>>
 }
 
 impl InMemoryKVStore {

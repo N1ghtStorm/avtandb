@@ -15,7 +15,7 @@ pub async fn create_graph(data: web::Data<AppState>, body: String) -> impl Respo
         Err(_) => panic!()
     };
           
-    return match core_model::validate_and_map_graph(dto, &data.graph_collection) {
+    match core_model::validate_and_map_graph(dto, &data.graph_collection) {
         Err(_) => {
             let graph_collection = data.graph_collection.in_memory_graph_collection.read().unwrap();
             let len = graph_collection.len();
@@ -29,7 +29,7 @@ pub async fn create_graph(data: web::Data<AppState>, body: String) -> impl Respo
             let answer  = format!("number is: {} body is \"{:?}\"", len, graph_collection);
             HttpResponse::Ok().body(answer)
         }
-    };
+    }
 }
 
 

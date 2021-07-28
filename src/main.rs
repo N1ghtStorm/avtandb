@@ -7,6 +7,7 @@ mod core_model;
 mod kv_model;
 mod api;
 mod core_model_tests;
+mod sharded_kv_graph;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
