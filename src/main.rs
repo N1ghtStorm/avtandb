@@ -4,14 +4,12 @@ mod api;
 mod kv_api;
 mod core_model_tests;
 mod sharded_kv_graph;
-
+mod ws;
+mod kv_ws;
 
 use std::sync::Arc;
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use std::sync::RwLock;
-use std::collections::HashMap;
-
-
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -28,6 +26,7 @@ async fn main() -> std::io::Result<()> {
             // TEST ENDPOINTS
             .route("/get_test_val", web::get().to(api::get_test_val_by_key))
             .route("/get_graph", web::post().to(api::create_graph))
+            .route("/ws/", web::get().to(ws::index))
             // KV - STORE:
             .route("/kv/value/{key}", web::post().to(kv_api::create_value))
             .route("/kv/value/{key}", web::get().to(kv_api::get_value))
