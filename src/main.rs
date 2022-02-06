@@ -33,6 +33,7 @@ async fn main() -> std::io::Result<()> {
             .route("/kv/value/{key}", web::put().to(kv_api::update_value))
             .route("/kv/value/{key}", web::delete().to(kv_api::delete_value))
             .route("/kv/get_all_keys", web::get().to(kv_api::get_all_keys))
+            .route("/ws/add_kv/", web::get().to(kv_ws::add_kv_ws2))
             .service(hi)
     })
     .bind(url)?

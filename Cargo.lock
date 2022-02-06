@@ -316,6 +316,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix_send_websocket"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9046fca0259df7e7c62b4dccbcd739ea98fda7d369839e68f6960531c43f3da9"
+dependencies = [
+ "actix-codec",
+ "actix-http",
+ "actix-utils",
+ "actix-web",
+ "futures-util",
+ "pin-project-lite 0.1.12",
+ "tokio",
+]
+
+[[package]]
 name = "adler"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -354,6 +369,7 @@ dependencies = [
  "actix",
  "actix-web",
  "actix-web-actors",
+ "actix_send_websocket",
  "chrono",
  "serde",
  "serde_json",
