@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 use serde::{Serialize, Deserialize};
 use std::collections::BTreeMap;
 use uuid::Uuid;

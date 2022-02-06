@@ -49,7 +49,7 @@ pub struct AppState {
 
 impl AppState {
     fn new() -> AppState {
-        AppState {graph_collection: AppState::initialize_graph_collection(), kv_collection: AppState::initialize_test_kv_store()}
+        AppState {graph_collection: AppState::initialize_graph_collection(), kv_collection: AppState::initialize_kv_store()}
      }
     
     /// initialize common graph collection for all programm lifetime
@@ -60,18 +60,8 @@ impl AppState {
     }
     
     // initialize kv store for all programm lifetime
-    fn initialize_test_kv_store() -> kv_model::InMemoryKVStore {
-        //kv_model::KVStore::new()
-        let key_1 = "foo".to_string();
-        let val_1 = 
-        "{
-            \"a\": 1,
-            \"b\": \"asd\",
-            \"arr\": [{},{},{\"lol\": 20}]
-        } ".to_string();
-        let mut hm = HashMap::new();
-        hm.insert(key_1, Arc::new(val_1));
-        kv_model::InMemoryKVStore{kv_hash_map: Arc::new(tokio::sync::RwLock::new(hm))}
+    fn initialize_kv_store() -> kv_model::InMemoryKVStore {
+        kv_model::InMemoryKVStore::new()
     }
 }
 

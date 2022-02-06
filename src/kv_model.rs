@@ -78,26 +78,26 @@ impl InMemoryKVStore {
     /// Get all Keys Collection
     pub async fn get_all_keys(&self) -> Result<Vec<String>, ()> {
         // NOT SURE IF self....lock() - is a good idea
-        let mut hash_map = self.kv_hash_map.read().await;
+        let hash_map = self.kv_hash_map.read().await;
 
         // TODO: think about .clone() ?????
         let vals: Vec<String> = hash_map.iter().map(|(x, _)| x.clone()).collect();
         Ok(vals)
     }
 
-    /// Renames Key
-    pub async fn rename_key(&mut self, key: String, new_key: String) -> Result<(), ()> {
-        // NOT SURE IF self....lock() - is a good idea
-        let mut hash_map = self.kv_hash_map.write().await;
-        match hash_map.remove(&key) {
-            None => Err(()),
-            Some(stored_val) => {
-                hash_map.remove(&key);
-                hash_map.insert(new_key, stored_val);
-                Ok(())
-            }
-        }
-    }
+    // /// Renames Key
+    // pub async fn rename_key(&mut self, key: String, new_key: String) -> Result<(), ()> {
+    //     // NOT SURE IF self....lock() - is a good idea
+    //     let mut hash_map = self.kv_hash_map.write().await;
+    //     match hash_map.remove(&key) {
+    //         None => Err(()),
+    //         Some(stored_val) => {
+    //             hash_map.remove(&key);
+    //             hash_map.insert(new_key, stored_val);
+    //             Ok(())
+    //         }
+    //     }
+    // }
 }
 
 // Stores KV on filesystem
