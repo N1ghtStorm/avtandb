@@ -61,7 +61,7 @@ impl AppState {
         } ".to_string();
         let mut hm = HashMap::new();
         hm.insert(key_1, Arc::new(val_1));
-        kv_model::InMemoryKVStore{kv_hash_map: Arc::new(RwLock::new(hm))}
+        kv_model::InMemoryKVStore{kv_hash_map: Arc::new(tokio::sync::RwLock::new(hm))}
     }
 }
 

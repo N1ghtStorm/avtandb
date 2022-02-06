@@ -4,8 +4,8 @@ use actix_web::{web, HttpResponse, Responder};
 use serde_json::Result;
 
 pub async fn get_test_val_by_key(data: web::Data<AppState>) -> impl Responder {
-    let arc_string_value = data.kv_collection.get_value("foo".to_string()).unwrap();
-    HttpResponse::Ok().body(format!("{}",arc_string_value))
+    let arc_string_value = data.kv_collection.get_value("foo".to_string()).await.unwrap();
+    HttpResponse::Ok().body(format!("{}", arc_string_value))
 }
 
 pub async fn create_graph(data: web::Data<AppState>, body: String) -> impl Responder {
@@ -31,7 +31,6 @@ pub async fn create_graph(data: web::Data<AppState>, body: String) -> impl Respo
         }
     }
 }
-
 
 async fn get_graph_by_name(data: web::Data<core_model::GraphCollectionFacade>, graph_name: String) -> impl Responder {
     let graph_collection = data.in_memory_graph_collection.read().unwrap();
