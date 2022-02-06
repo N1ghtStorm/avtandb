@@ -17,6 +17,12 @@ pub struct InMemoryKVStore {
     pub kv_hash_map: Arc<RwLock<HashMap<String, Arc<String>>>>
 }
 
+impl Clone for InMemoryKVStore {
+    fn clone(&self) -> Self {
+        Self { kv_hash_map: self.kv_hash_map.clone() }
+    }
+}
+
 pub struct TtlMap {
     pub kv_hash_map: Arc<RwLock<HashMap<String, DateTime<Utc>>>>
 }
@@ -30,13 +36,15 @@ impl InMemoryKVStore {
     pub async fn add_value(&mut self, key: String, value: String) -> Result<(), ()> {
         // NOT SURE IF self....lock() - is a good idea
         let mut hash_map = self.kv_hash_map.write().await;
+        if let Some(_) = hash_map.get(&key) {
+            return Err(())
+        }
         hash_map.insert(key, Arc::new(value));
         Ok(())
     }
 
     /// Get value
     pub async fn get_value(&self, key: String) -> Result<Arc<String>, ()> {
-        // NOT SURE IF self....lock() - is a good idea
         let hash_map = self.kv_hash_map.read().await;
         let val = hash_map.get(&key);
 
@@ -47,8 +55,7 @@ impl InMemoryKVStore {
     }
 
     /// Removes Key-Value Pair from KV collection
-    pub async fn remove_key(&mut self, key: String) -> Result<(),()> {
-        // NOT SURE IF self....lock() - is a good idea
+    pub async fn remove_value(&mut self, key: String) -> Result<(),()> {
         let mut hash_map = self.kv_hash_map.write().await;
         match hash_map.remove(&key) {
             Some(_) => Ok(()),
@@ -58,7 +65,6 @@ impl InMemoryKVStore {
 
     /// Updates the value by key
     pub async fn update_value(&mut self, key: String, value: String) -> Result<(),()> {
-        // NOT SURE IF self....lock() - is a good idea
         let mut hash_map = self.kv_hash_map.write().await;
         match hash_map.get(&key){
             None => Err(()),
