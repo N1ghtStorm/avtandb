@@ -35,6 +35,13 @@ pub struct GetKVRequestDto {
     pub key: String, 
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetKVResponceDto {
+    pub error: String,
+    pub value: String
+}
+
+
 // pub struct DeleteKVRequestDto {
 //     pub key: String, 
 // }
@@ -178,7 +185,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for AddKVRequestActor
     }
 }
 
-pub async fn add_kv_ws(data: web::Data<AppState>, req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
+pub async fn add_kv_ws_old(data: web::Data<AppState>, req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
     let resp = ws::start(AddKVRequestActor{ kv_store: data.kv_collection.clone() }, &req, stream);
     resp
 }
@@ -187,7 +194,7 @@ pub async fn add_kv_ws(data: web::Data<AppState>, req: HttpRequest, stream: web:
 // use actix_web::{get, App, Error, HttpRequest, HttpServer, Responder};
 use actix_send_websocket::{Message, WebSocket};
 
-pub async fn add_kv_ws2(data: web::Data<AppState>, ws: WebSocket) -> impl actix_web::Responder {
+pub async fn add_kv_ws(data: web::Data<AppState>, ws: WebSocket) -> impl actix_web::Responder {
     // stream is the async iterator of incoming client websocket messages.
     // res is the response we return to client.
     // tx is a sender to push new websocket message to client response.
@@ -202,17 +209,70 @@ pub async fn add_kv_ws2(data: web::Data<AppState>, ws: WebSocket) -> impl actix_
                     let add_kv_request_dto_res: serde_json::Result<AddKVRequestDto> =  serde_json::from_str(&text);
                     let add_kv_request_dto = match add_kv_request_dto_res{
                         Err(e) => {
-                            tx.text(format!("Error serializing {e}"));
-                            return;
+                            let _ = tx.text(format!("Error serializing {e}"));
+                            continue;
                         },
                         Ok(a) => a
                     };
-                    let res = data.kv_collection.clone().add_value(add_kv_request_dto.key, add_kv_request_dto.value).await;
-                    if let Err(e) = res {
+                    let add_val_res = data.kv_collection.clone().add_value(add_kv_request_dto.key, add_kv_request_dto.value).await;
+                    if let Err(e) = add_val_res {
                         let _ = tx.text("bad!!!");
+                        continue;
                     }
 
                     tx.text("ok")
+                },
+                Message::Ping(bytes) => tx.pong(&bytes),
+                Message::Close(reason) => {
+                    println!("{}", reason.clone().unwrap().description.unwrap());
+                    let _ = tx.close(reason);
+                    // force end the stream when we have a close message.
+                    break;
+                }
+                // other types of message would be ignored
+                _ => Ok(()),
+            };
+            if result.is_err() {
+                // end the stream when the response is gone.
+                break;
+            }
+        }   
+    });
+
+    res
+}
+
+pub async fn get_kv_ws(data: web::Data<AppState>, ws: WebSocket) -> impl actix_web::Responder {
+    // stream is the async iterator of incoming client websocket messages.
+    // res is the response we return to client.
+    // tx is a sender to push new websocket message to client response.
+    let (mut stream, res, mut tx) = ws.into_parts();
+
+    // spawn the stream handling so we don't block the response to client.
+    actix_web::rt::spawn(async move {
+        while let Some(Ok(msg)) = stream.next().await {
+            let result = match msg {
+                // we echo text message and ping message to client.
+                Message::Text(text) => {
+                    let get_kv_request_dto_res: serde_json::Result<GetKVRequestDto> =  serde_json::from_str(&text);
+                    let get_kv_request_dto = match get_kv_request_dto_res{
+                        Err(e) => {
+                            let resp = GetKVResponceDto {error: format!("{e}"), value: String::from("")};
+                            let _ = tx.text(serde_json::to_string(&resp).expect("err serializing"));
+                            continue;
+                        },
+                        Ok(a) => a
+                    };
+                    let get_val_res = match  data.kv_collection.clone().get_value(get_kv_request_dto.key).await {
+                        Err(_) => {
+                            let _ = tx.text("");
+                            continue;
+                        },
+                        Ok(v) => v
+                    };
+                    let responce = GetKVResponceDto {error: String::from(""), value: format!("{get_val_res}")};
+                    let answer = serde_json::to_string(&responce).expect("err serializing");
+                    tx.text(answer)
                 },
                 Message::Ping(bytes) => tx.pong(&bytes),
                 Message::Close(reason) => {

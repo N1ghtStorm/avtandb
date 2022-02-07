@@ -23,6 +23,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new( move || {  
         App::new()
             .app_data(app_state.clone())
+            .app_data(actix_send_websocket::WsConfig::new().disable_heartbeat())
             // TEST ENDPOINTS
             .route("/get_test_val", web::get().to(api::get_test_val_by_key))
             .route("/get_graph", web::post().to(api::create_graph))
@@ -33,7 +34,8 @@ async fn main() -> std::io::Result<()> {
             .route("/kv/value/{key}", web::put().to(kv_api::update_value))
             .route("/kv/value/{key}", web::delete().to(kv_api::delete_value))
             .route("/kv/get_all_keys", web::get().to(kv_api::get_all_keys))
-            .route("/ws/add_kv/", web::get().to(kv_ws::add_kv_ws2))
+            .route("/ws/add_kv/", web::get().to(kv_ws::add_kv_ws))
+            .route("/ws/get_kv/", web::get().to(kv_ws::get_kv_ws))
             .service(hi)
     })
     .bind(url)?
