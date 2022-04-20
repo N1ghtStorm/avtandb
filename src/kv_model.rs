@@ -43,16 +43,6 @@ impl InMemoryKVStore {
         Ok(())
     }
 
-    pub async fn add_value_sync(&mut self, key: String, value: String) -> Result<(), ()> {
-        // NOT SURE IF self....lock() - is a good idea
-        let mut hash_map = self.kv_hash_map.write().await;
-        if let Some(_) = hash_map.get(&key) {
-            return Err(())
-        }
-        hash_map.insert(key, Arc::new(value));
-        Ok(())
-    }
-
     /// Get value
     pub async fn get_value(&self, key: String) -> Result<Arc<String>, ()> {
         let hash_map = self.kv_hash_map.read().await;

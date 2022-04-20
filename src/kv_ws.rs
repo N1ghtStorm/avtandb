@@ -15,7 +15,7 @@ pub struct GetKVRequestDto {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct GetKVResponceDto {
+pub struct KVResponceDto {
     pub error: String,
     pub value: String
 }
@@ -58,29 +58,33 @@ async fn init_ws_conn(data: web::Data<AppState>, ws: WebSocket, method: WsMethod
                             };
                             let add_val_res = data.kv_collection.clone().add_value(add_kv_request_dto.key, add_kv_request_dto.value).await;
                             if let Err(_) = add_val_res {
-                                let _ = tx.text("bad!!!");
+                                let responce = KVResponceDto {error: String::from("Add value error"), value: String::from("")};
+                                let answer = serde_json::to_string(&responce).expect("err serializing");
+                                let _ = tx.text(answer);
                                 continue;
                             }
-                            tx.text("ok")
+                            let responce = KVResponceDto {error: String::from(""), value: String::from("")};
+                            let answer = serde_json::to_string(&responce).expect("err serializing");
+                            tx.text(answer)
                         },
                         WsMethod::GetKvWs => {
                             let get_kv_request_dto_res: serde_json::Result<GetKVRequestDto> =  serde_json::from_str(&text);
                             let get_kv_request_dto = match get_kv_request_dto_res{
                                 Err(e) => {
-                                    let resp = GetKVResponceDto {error: format!("{e}"), value: String::from("")};
+                                    let resp = KVResponceDto {error: format!("{e}"), value: String::from("")};
                                     let _ = tx.text(serde_json::to_string(&resp).expect("err serializing"));
                                     continue;
                                 },
                                 Ok(a) => a
                             };
-                            let get_val_res = match  data.kv_collection.clone().get_value(get_kv_request_dto.key).await {
+                            let get_val_res = match data.kv_collection.clone().get_value(get_kv_request_dto.key).await {
                                 Err(_) => {
                                     let _ = tx.text("");
                                     continue;
                                 },
                                 Ok(v) => v
                             };
-                            let responce = GetKVResponceDto {error: String::from(""), value: format!("{get_val_res}")};
+                            let responce = KVResponceDto {error: String::from(""), value: format!("{get_val_res}")};
                             let answer = serde_json::to_string(&responce).expect("err serializing");
                             tx.text(answer)
                         },
@@ -108,13 +112,4 @@ async fn init_ws_conn(data: web::Data<AppState>, ws: WebSocket, method: WsMethod
     });
 
     res
-}
-
-
-async fn aaa(data: web::Data<AppState>, ws: WebSocket) {
-//    let res = init_ws_conn(data, ws, Box::new(bbb)).await;
-}
-
-async fn bbb() {
-    
 }

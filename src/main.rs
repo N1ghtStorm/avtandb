@@ -4,7 +4,6 @@ mod api;
 mod kv_api;
 mod core_model_tests;
 mod sharded_kv_graph;
-mod ws;
 mod kv_ws;
 
 use std::sync::Arc;
@@ -27,7 +26,6 @@ async fn main() -> std::io::Result<()> {
             // TEST ENDPOINTS
             .route("/get_test_val", web::get().to(api::get_test_val_by_key))
             .route("/get_graph", web::post().to(api::create_graph))
-            .route("/ws/", web::get().to(ws::index))
             // KV - STORE:
             .route("/kv/value/{key}", web::post().to(kv_api::create_value))
             .route("/kv/value/{key}", web::get().to(kv_api::get_value))
@@ -35,7 +33,7 @@ async fn main() -> std::io::Result<()> {
             .route("/kv/value/{key}", web::delete().to(kv_api::delete_value))
             .route("/kv/get_all_keys", web::get().to(kv_api::get_all_keys))
             .route("/ws/add_kv/", web::get().to(kv_ws::add_kv_ws))
-            .route("/ws/get_kv/", web::get().to(kv_ws::get_kv_ws))
+            .route("/ws/add_kv/", web::get().to(kv_ws::get_kv_ws))
             .service(hi)
     })
     .bind(url)?
