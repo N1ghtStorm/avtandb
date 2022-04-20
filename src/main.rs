@@ -5,6 +5,7 @@ mod kv_api;
 mod core_model_tests;
 mod sharded_kv_graph;
 mod kv_ws;
+mod substrate_kv_api;
 
 use std::sync::Arc;
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
@@ -91,6 +92,7 @@ fn print_console_avtan(url: &&str)  {
 /// Healthcheck endpoint
 #[get("/avtan")]
 async fn hi() -> impl Responder {
+    // substrate_kv_api::create_test_value();
     HttpResponse::Ok().body("
                         ~-.
                         ,,,;            ~-.~-.~-

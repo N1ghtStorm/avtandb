@@ -511,9 +511,13 @@ dependencies = [
  "actix-web-actors",
  "actix_send_websocket",
  "chrono",
+ "parity-scale-codec",
  "pin-project-internal 1.0.10",
  "serde",
  "serde_json",
+ "sp-core",
+ "sp-keyring",
+ "sp-runtime",
  "substrate-api-client",
  "tokio",
  "uuid",
@@ -1020,7 +1024,7 @@ version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "570d109b813e904becc80d8d5da38376818a143348413f7149f1340fe04754d4"
 dependencies = [
- "heck",
+ "heck 0.4.0",
  "proc-macro2",
  "quote",
  "syn",
@@ -1425,6 +1429,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c21d40587b92fa6a6c6e3c1bdbf87d75511db5672f9c93175574b3a00df1758"
 dependencies = [
  "ahash",
+]
+
+[[package]]
+name = "heck"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d621efb26863f0e9924c6ac577e8275e5e6b77455db64ffa6c65c904e9e132c"
+dependencies = [
+ "unicode-segmentation",
 ]
 
 [[package]]
@@ -2574,6 +2587,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustversion"
+version = "1.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2cc38e8fa666e2de3c4aba7edeb5ffc5246c1c2ed0e3d17e560aeeba736b23f"
+
+[[package]]
 name = "ryu"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3054,6 +3073,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sp-keyring"
+version = "6.0.0"
+source = "git+https://github.com/paritytech/substrate.git?branch=master#f5f286db0da99761792b69bf4a997535dcc8f260"
+dependencies = [
+ "lazy_static",
+ "sp-core",
+ "sp-runtime",
+ "strum",
+]
+
+[[package]]
 name = "sp-keystore"
 version = "0.12.0"
 source = "git+https://github.com/paritytech/substrate.git?branch=master#f5f286db0da99761792b69bf4a997535dcc8f260"
@@ -3351,6 +3381,28 @@ name = "stdweb-internal-runtime"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "213701ba3370744dcd1a12960caa4843b3d68b4d1c0a5d575e0d65b2ee9d16c0"
+
+[[package]]
+name = "strum"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cae14b91c7d11c9a851d3fbc80a963198998c2a64eec840477fa92d8ce9b70bb"
+dependencies = [
+ "strum_macros",
+]
+
+[[package]]
+name = "strum_macros"
+version = "0.23.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5bb0dc7ee9c15cea6199cde9a127fa16a4c5819af85395457ad72d68edc85a38"
+dependencies = [
+ "heck 0.3.3",
+ "proc-macro2",
+ "quote",
+ "rustversion",
+ "syn",
+]
 
 [[package]]
 name = "substrate-api-client"
@@ -3792,6 +3844,12 @@ checksum = "d54590932941a9e9266f0832deed84ebe1bf2e4c9e4a3554d393d18f5e854bf9"
 dependencies = [
  "tinyvec",
 ]
+
+[[package]]
+name = "unicode-segmentation"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e8820f5d777f6224dc4be3632222971ac30164d4a258d595640799554ebfd99"
 
 [[package]]
 name = "unicode-xid"
