@@ -2,7 +2,7 @@
 name = "avtandb"
 version = "0.1.0"
 authors = ["N1ghtStorm <diman1ghtly@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -10,9 +10,11 @@ edition = "2018"
 actix-web = "3"
 actix-web-actors = "3"
 actix = "0.10"
-serde = { version = "1.0", features = ["derive"] }
+serde = {  features = ["derive"] }
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 uuid = { version = "0.8", features = ["serde", "v4"] }
 chrono = "0.4.1"
 tokio = { version = "0.2 ", features = ["sync", "blocking"]}
 actix_send_websocket = {version = "0.1"}
+pin-project-internal = "1.0.10"
+substrate-api-client = { git = "https://github.com/scs/substrate-api-client.git" }
