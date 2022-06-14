@@ -1,43 +1,47 @@
 use std::sync::Arc;
 // use std::sync::RwLock;
-use tokio::sync::RwLock;
+use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 use std::collections::HashMap;
-use chrono::{DateTime, TimeZone, NaiveDateTime, Utc};
+use tokio::sync::RwLock;
 //use chrono::{DateTime};
 
 pub trait KVStore {
     fn add_value(&mut self, key: String, value: String) -> Result<(), ()>;
     fn get_value(&self, key: String) -> Result<Arc<String>, ()>;
-    fn remove_key(&mut self, key: String) -> Result<(),()>;
-    fn update_value(&mut self, key: String, value: String) -> Result<(),()>;
+    fn remove_key(&mut self, key: String) -> Result<(), ()>;
+    fn update_value(&mut self, key: String, value: String) -> Result<(), ()>;
 }
 
 /// Facade over main hash map
 pub struct InMemoryKVStore {
-    pub kv_hash_map: Arc<RwLock<HashMap<String, Arc<String>>>>
+    pub kv_hash_map: Arc<RwLock<HashMap<String, Arc<String>>>>,
 }
 
 impl Clone for InMemoryKVStore {
     fn clone(&self) -> Self {
-        Self { kv_hash_map: self.kv_hash_map.clone() }
+        Self {
+            kv_hash_map: self.kv_hash_map.clone(),
+        }
     }
 }
 
 pub struct TtlMap {
-    pub kv_hash_map: Arc<RwLock<HashMap<String, DateTime<Utc>>>>
+    pub kv_hash_map: Arc<RwLock<HashMap<String, DateTime<Utc>>>>,
 }
 
 impl InMemoryKVStore {
     /// ctor
     pub fn new() -> Self {
-        InMemoryKVStore { kv_hash_map: Arc::new(RwLock::new(HashMap::new())) }
+        InMemoryKVStore {
+            kv_hash_map: Arc::new(RwLock::new(HashMap::new())),
+        }
     }
 
     pub async fn add_value(&mut self, key: String, value: String) -> Result<(), ()> {
         // NOT SURE IF self....lock() - is a good idea
         let mut hash_map = self.kv_hash_map.write().await;
         if let Some(_) = hash_map.get(&key) {
-            return Err(())
+            return Err(());
         }
         hash_map.insert(key, Arc::new(value));
         Ok(())
@@ -50,23 +54,23 @@ impl InMemoryKVStore {
 
         return match val {
             Some(inner_val) => Ok(inner_val.clone()),
-            None => Err(())
+            None => Err(()),
         };
     }
 
     /// Removes Key-Value Pair from KV collection
-    pub async fn remove_value(&mut self, key: String) -> Result<(),()> {
+    pub async fn remove_value(&mut self, key: String) -> Result<(), ()> {
         let mut hash_map = self.kv_hash_map.write().await;
         match hash_map.remove(&key) {
             Some(_) => Ok(()),
-            None => Err(())
+            None => Err(()),
         }
     }
 
     /// Updates the value by key
-    pub async fn update_value(&mut self, key: String, value: String) -> Result<(),()> {
+    pub async fn update_value(&mut self, key: String, value: String) -> Result<(), ()> {
         let mut hash_map = self.kv_hash_map.write().await;
-        match hash_map.get(&key){
+        match hash_map.get(&key) {
             None => Err(()),
             Some(_) => {
                 hash_map.insert(key, Arc::new(value));
@@ -84,25 +88,10 @@ impl InMemoryKVStore {
         let vals: Vec<String> = hash_map.iter().map(|(x, _)| x.clone()).collect();
         Ok(vals)
     }
-
-    // /// Renames Key
-    // pub async fn rename_key(&mut self, key: String, new_key: String) -> Result<(), ()> {
-    //     // NOT SURE IF self....lock() - is a good idea
-    //     let mut hash_map = self.kv_hash_map.write().await;
-    //     match hash_map.remove(&key) {
-    //         None => Err(()),
-    //         Some(stored_val) => {
-    //             hash_map.remove(&key);
-    //             hash_map.insert(new_key, stored_val);
-    //             Ok(())
-    //         }
-    //     }
-    // }
 }
 
 // Stores KV on filesystem
-pub struct DurableKVStore {
-}
+pub struct DurableKVStore {}
 
 impl DurableKVStore {
     fn new() -> Self {
@@ -121,11 +110,11 @@ impl KVStore for DurableKVStore {
         todo!();
     }
 
-    fn remove_key(&mut self, key: String) -> Result<(),()> {
+    fn remove_key(&mut self, key: String) -> Result<(), ()> {
         todo!();
     }
 
-    fn update_value(&mut self, key: String, value: String) -> Result<(),()> {
+    fn update_value(&mut self, key: String, value: String) -> Result<(), ()> {
         todo!();
     }
 }
@@ -133,5 +122,5 @@ impl KVStore for DurableKVStore {
 /// To choose which KV type to use
 pub enum KVType {
     INMemory,
-    Durable
+    Durable,
 }

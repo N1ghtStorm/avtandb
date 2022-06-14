@@ -10,7 +10,6 @@
 //     compose_extrinsic, Api, GenericAddress, UncheckedExtrinsicV4, XtStatus,
 // };
 
-
 // pub async fn create_value(data: web::Data<AppState>, web::Path(key): web::Path<String>, value: String) -> impl Responder {
 //     // if let Err(_) = data.kv_collection.clone().add_value(key, value).await {
 //     //     return HttpResponse::BadRequest().body("")
@@ -23,7 +22,6 @@
 //     let api = Api::new(client)
 //         .map(|api| api.set_signer(from.clone()))
 //         .unwrap();
-
 
 //     #[allow(clippy::redundant_clone)]
 //     let xt: UncheckedExtrinsicV4<_> = compose_extrinsic!(
@@ -52,7 +50,6 @@
 //     let api = Api::new(client)
 //         .map(|api| api.set_signer(from.clone()))
 //         .unwrap();
-
 
 //     #[allow(clippy::redundant_clone)]
 //     let xt: UncheckedExtrinsicV4<_> = compose_extrinsic!(

@@ -1,17 +1,15 @@
-mod core_model;
-mod kv_model;
 mod api;
-mod kv_api;
+mod core_model;
 mod core_model_tests;
-mod sharded_kv_graph;
+mod kv_api;
+mod kv_model;
 mod kv_ws;
+mod sharded_kv_graph;
 mod substrate_kv_api;
 
-use std::sync::Arc;
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+use std::sync::Arc;
 use std::sync::RwLock;
-
-
 
 // use sp_core::crypto::Pair;
 // use sp_keyring::AccountKeyring;
@@ -22,18 +20,16 @@ use std::sync::RwLock;
 //     compose_extrinsic, Api, GenericAddress, UncheckedExtrinsicV4, XtStatus,
 // };
 
-
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let url = "0.0.0.0:18085";
     print_console_avtan(&url);
 
     // CREATE GLOBAL STATE INITIALIZING GRAPH COLLECTION AND KV COLLECTION
-    let app_state = web::Data::new( AppState::new());
+    let app_state = web::Data::new(AppState::new());
 
     // START HTTP SERVER WITH GLOBAL STATE
-    HttpServer::new( move || {  
+    HttpServer::new(move || {
         App::new()
             .app_data(app_state.clone())
             .app_data(actix_send_websocket::WsConfig::new().disable_heartbeat())
@@ -58,21 +54,24 @@ async fn main() -> std::io::Result<()> {
 // WRAPPER STRUCT TO PROVIDE GLOBAL STATE
 pub struct AppState {
     graph_collection: core_model::GraphCollectionFacade,
-    kv_collection: kv_model::InMemoryKVStore
+    kv_collection: kv_model::InMemoryKVStore,
 }
 
 impl AppState {
     fn new() -> AppState {
-        AppState {graph_collection: AppState::initialize_graph_collection(), kv_collection: AppState::initialize_kv_store()}
-     }
-    
+        AppState {
+            graph_collection: AppState::initialize_graph_collection(),
+            kv_collection: AppState::initialize_kv_store(),
+        }
+    }
+
     /// initialize common graph collection for all programm lifetime
     fn initialize_graph_collection() -> core_model::GraphCollectionFacade {
         core_model::GraphCollectionFacade {
-            in_memory_graph_collection: Arc::new(RwLock::new(Vec::new()))
+            in_memory_graph_collection: Arc::new(RwLock::new(Vec::new())),
         }
     }
-    
+
     // initialize kv store for all programm lifetime
     fn initialize_kv_store() -> kv_model::InMemoryKVStore {
         kv_model::InMemoryKVStore::new()
@@ -80,8 +79,9 @@ impl AppState {
 }
 
 /// Print avtan greeting
-fn print_console_avtan(url: &&str)  {
-    println!("
+fn print_console_avtan(url: &&str) {
+    println!(
+        "
                         ░░░░░░░░▄▀▀▄
                         ░░░░░▄▀▒▒▒▒▀▄
                         ░░░░░░▀▌▒▒▐▀ 
@@ -97,16 +97,20 @@ fn print_console_avtan(url: &&str)  {
                         ░░░░░░░░▀▀▀▄▄▄▄▄▄▄▄▀▀░
                         ░░░░░░░░░░░▌▌░▌▌
                         ░░░░░░░░░▄▄▌▌▄▌▌
-    ");
-    println!("                           🦀🐔🐔🐔🐔🐔🐔🐔🐔🦀
-                    Avtan server starting on {}", url);
+    "
+    );
+    println!(
+        "                           🦀🐔🐔🐔🐔🐔🐔🐔🐔🦀
+                    Avtan server starting on {}",
+        url
+    );
 }
 
 /// Healthcheck endpoint
 #[get("/avtan")]
 async fn hi() -> impl Responder {
-
-    HttpResponse::Ok().body("
+    HttpResponse::Ok().body(
+        "
                         ~-.
                         ,,,;            ~-.~-.~-
                     (.../           ~-.~-.~-.~-.~-.
@@ -124,5 +128,6 @@ async fn hi() -> impl Responder {
                             / |
                           __   _
            AVTAN DB IS RUNNING!!! KOKOKOKO!!!!! ;)
-    ")
+    ",
+    )
 }
