@@ -17,9 +17,9 @@ chrono = "0.4.1"
 tokio = { version = "0.2 ", features = ["sync", "blocking"]}
 actix_send_websocket = {version = "0.1"}
 pin-project-internal = "1.0.10"
-substrate-api-client = { git = "https://github.com/scs/substrate-api-client.git" }
+# substrate-api-client = { git = "https://github.com/scs/substrate-api-client.git" }
 
-codec = { package = "parity-scale-codec", features = ["derive"], version = "3.0.0" }
-sp-core = { version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-keyring = { version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-runtime = { version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "master" }
+# codec = { package = "parity-scale-codec", features = ["derive"], version = "3.0.0" }
+# sp-core = { version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "master" }
+# sp-keyring = { version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "master" }
+# sp-runtime = { version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "master" }

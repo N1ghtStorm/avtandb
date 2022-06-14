@@ -13,14 +13,14 @@ use std::sync::RwLock;
 
 
 
-use sp_core::crypto::Pair;
-use sp_keyring::AccountKeyring;
-use sp_runtime::MultiAddress;
+// use sp_core::crypto::Pair;
+// use sp_keyring::AccountKeyring;
+// use sp_runtime::MultiAddress;
 
-use substrate_api_client::rpc::WsRpcClient;
-use substrate_api_client::{
-    compose_extrinsic, Api, GenericAddress, UncheckedExtrinsicV4, XtStatus,
-};
+// use substrate_api_client::rpc::WsRpcClient;
+// use substrate_api_client::{
+//     compose_extrinsic, Api, GenericAddress, UncheckedExtrinsicV4, XtStatus,
+// };
 
 
 
@@ -105,33 +105,6 @@ fn print_console_avtan(url: &&str)  {
 /// Healthcheck endpoint
 #[get("/avtan")]
 async fn hi() -> impl Responder {
-    let key = "lol".to_string();
-    let value = "lol lol lol".to_string();
-
-    let url = "ws://127.0.0.1:9944";
-    let from = AccountKeyring::Alice.pair();
-    let client = WsRpcClient::new(&url);
-    let api = match Api::new(client)
-        .map(|api| api.set_signer(from.clone()))
-        {
-            Err(e) => {
-                println!("{e}");
-                // panic!()
-                let err = format!("{e}");
-                return HttpResponse::BadRequest().body(err);
-            },
-            Ok(v) => v
-        };
-
-
-    #[allow(clippy::redundant_clone)]
-    let xt: UncheckedExtrinsicV4<_> = compose_extrinsic!(
-        api.clone(),
-        "avtanDbKeyValue",
-        "addValue",
-        key.as_bytes(),
-        value.as_bytes()
-    );
 
     HttpResponse::Ok().body("
                         ~-.
